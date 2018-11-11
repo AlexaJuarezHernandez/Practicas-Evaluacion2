@@ -1,0 +1,4053 @@
+Alexa Juarez Hernandez
+
+1.El cliente que ha comprado menos
+
+select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname order by sum(c.unitprice*c.quantity) limit 1;
++-----------------+-----------------------------+
+| contactname     | sum(c.unitprice*c.quantity) |
++-----------------+-----------------------------+
+| Francisco Chang |                    100.8000 |
++-----------------+-----------------------------+
+
+2.El cliente que ha comprado mas
+select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname order by sum(c.unitprice*c.quantity) desc limit 1;
++-------------+-----------------------------+
+| contactname | sum(c.unitprice*c.quantity) |
++-------------+-----------------------------+
+| Horst Kloss |                 117483.3900 |
++-------------+-----------------------------+
+
+
+3.El producto mas vendido
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity) desc limit 1;
++-------------------+-----------------+
+| productname       | sum(b.quantity) |
++-------------------+-----------------+
+| Camembert Pierrot |            1577 |
++-------------------+-----------------+
+1 row in set (0.0037 sec)
+
+4.El producto mas lucrativo
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity*b.unitprice) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity*b.unitprice) desc limit 1;
++--------------+-----------------------------+
+| productname  | sum(b.quantity*b.unitprice) |
++--------------+-----------------------------+
+| Cte de Blaye |                 149984.2000 |
++--------------+-----------------------------+
+1 row in set (0.0045 sec)
+
+
+5.El producto menos lucrativo
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity*b.unitprice) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity*b.unitprice) limit 1;
++-------------+-----------------------------+
+| productname | sum(b.quantity*b.unitprice) |
++-------------+-----------------------------+
+| Chocolade   |                   1542.7500 |
++-------------+-----------------------------+
+1 row in set (0.0045 sec)
+
+6. ¿Cuál es el producto más comprado por el cliente que más compras realiza?
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by a.productname order by count(*)
+desc limit 1;
++-------------------------------+-------------+----------+
+| productname                   | contactname | count(*) |
++-------------------------------+-------------+----------+
+| Singaporean Hokkien Fried Mee | Horst Kloss |        4 |
++-------------------------------+-------------+----------+
+1 row in set (0.0135 sec)
+
+7. ¿Cuál es el empleado con más ventas?
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*) as ordenes from
+ employees b inner join orders a on b.employeeid=a.employeeid group by a.employe
+eid order by count(*) desc limit 1;
++-----------+---------+
+| firstname | ordenes |
++-----------+---------+
+| Margaret  |     156 |
++-----------+---------+
+1 row in set (0.0069 sec)
+
+
+8.Empleado con menos ventas
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*) as ordenes from
+ employees b inner join orders a on b.employeeid=a.employeeid group by a.employe
+eid order by count(*) limit 1;
++-----------+---------+
+| firstname | ordenes |
++-----------+---------+
+| Steven    |      42 |
++-----------+---------+
+1 row in set (0.0059 sec)
+
+
+9.¿A qué proveedores hay que realizarles compras próximamente? (Que no hay unidades
+en almacén ni en orden de compra ? campos Unitsinstock, unitsonorder)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitsinstock,b.units
+onorder from suppliers a inner join products b on a.supplierid=b.supplierid wher
+e unitsinstock<1 and unitsonorder<1;
++---------------------------------+--------------+--------------+
+| companyname                     | unitsinstock | unitsonorder |
++---------------------------------+--------------+--------------+
+| New Orleans Cajun Delights      |            0 |            0 |
+| Pavlova, Ltd.                   |            0 |            0 |
+| Plutzer Lebensmittelgromrkte AG |            0 |            0 |
+| G'day, Mate                     |            0 |            0 |
+| Plutzer Lebensmittelgromrkte AG |            0 |            0 |
++---------------------------------+--------------+--------------+
+5 rows in set (0.0017 sec)
+
+
+
+10.¿Cuál es el proveedor al que le compramos más (Unitsonorder, unitprice)?
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,sum(b.unitprice*b.unit
+sonorder) as total from suppliers a inner join products b on a.supplierid=b.supp
+lierid group by a.companyname order by sum(b.unitprice*b.unitsonorder) desc limi
+t 1;
++---------------------------------+-----------+
+| companyname                     | total     |
++---------------------------------+-----------+
+| Plutzer Lebensmittelgromrkte AG | 2660.0000 |
++---------------------------------+-----------+
+1 row in set (0.0024 sec)
+
+
+
+
+
+
+
+Codigo completo:
+
+MySQL Shell 8.0.12
+
+Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type '\help' or '\?' for help; '\quit' to exit.
+
+
+ MySQL  JS > \sql
+Switching to SQL mode... Commands end with ;
+
+ MySQL  SQL > \connect --mysql root@localhost
+Creating a Classic session to 'root@localhost'
+Please provide the password for 'root@localhost': ****
+Save password for 'root@localhost:3306'? [Y]es/[N]o/Ne[v]er (default No): y
+Fetching schema names for autocompletion... Press ^C to stop.
+Your MySQL connection id is 1
+Server version: 5.5.61 MySQL Community Server (GPL)
+No default schema selected; type \use <schema> to set one.
+
+ MySQL  localhost:3306  SQL > show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| nor                |
+| performance_schema |
+| sakila             |
+| test               |
+| world              |
++--------------------+
+7 rows in set (0.0008 sec)
+
+ MySQL  localhost:3306  SQL > use nor
+Default schema set to `nor`.
+Fetching table and column names from `nor` for auto-completion... Press ^C to stop.
+
+ MySQL  localhost:3306  nor  SQL > show tables;
++----------------------+
+| Tables_in_nor        |
++----------------------+
+| account              |
+| categories           |
+| customercustomerdemo |
+| customerdemographics |
+| customers            |
+| empleados            |
+| employees            |
+| employeeterritories  |
+| lista_empleados      |
+| lista_empleados_a    |
+| nombre_cliente       |
+| orderdetails         |
+| orders               |
+| pagos_empleados      |
+| personas             |
+| products             |
+| prueba2              |
+| region               |
+| rfc_gringos          |
+| shippers             |
+| suppliers            |
+| territories          |
+| ventas_producto      |
++----------------------+
+23 rows in set (0.0006 sec)
+
+ MySQL  localhost:3306  nor  SQL > desc customers;
++--------------+-------------+------+-----+---------+-------+
+| Field        | Type        | Null | Key | Default | Extra |
++--------------+-------------+------+-----+---------+-------+
+| CustomerID   | varchar(5)  | NO   | PRI | NULL    |       |
+| CompanyName  | varchar(40) | NO   | MUL | NULL    |       |
+| ContactName  | varchar(30) | YES  |     | NULL    |       |
+| ContactTitle | varchar(30) | YES  |     | NULL    |       |
+| Address      | varchar(60) | YES  |     | NULL    |       |
+| City         | varchar(15) | YES  | MUL | NULL    |       |
+| Region       | varchar(15) | YES  | MUL | NULL    |       |
+| PostalCode   | varchar(10) | YES  | MUL | NULL    |       |
+| Country      | varchar(15) | YES  |     | NULL    |       |
+| Phone        | varchar(24) | YES  |     | NULL    |       |
+| Fax          | varchar(24) | YES  |     | NULL    |       |
++--------------+-------------+------+-----+---------+-------+
+11 rows in set (0.0058 sec)
+
+ MySQL  localhost:3306  nor  SQL > desc orders;
++----------------+---------------+------+-----+---------+----------------+
+| Field          | Type          | Null | Key | Default | Extra          |
++----------------+---------------+------+-----+---------+----------------+
+| OrderID        | int(11)       | NO   | PRI | NULL    | auto_increment |
+| CustomerID     | varchar(5)    | YES  | MUL | NULL    |                |
+| EmployeeID     | int(11)       | YES  | MUL | NULL    |                |
+| OrderDate      | datetime      | YES  | MUL | NULL    |                |
+| RequiredDate   | datetime      | YES  |     | NULL    |                |
+| ShippedDate    | datetime      | YES  | MUL | NULL    |                |
+| ShipVia        | int(11)       | YES  | MUL | NULL    |                |
+| Freight        | decimal(10,4) | YES  |     | 0.0000  |                |
+| ShipName       | varchar(40)   | YES  |     | NULL    |                |
+| ShipAddress    | varchar(60)   | YES  |     | NULL    |                |
+| ShipCity       | varchar(15)   | YES  |     | NULL    |                |
+| ShipRegion     | varchar(15)   | YES  |     | NULL    |                |
+| ShipPostalCode | varchar(10)   | YES  | MUL | NULL    |                |
+| ShipCountry    | varchar(15)   | YES  |     | NULL    |                |
++----------------+---------------+------+-----+---------+----------------+
+14 rows in set (0.0049 sec)
+
+ MySQL  localhost:3306  nor  SQL > desc orderdeails;
+ERROR: 1146 (42S02): Table 'nor.orderdeails' doesn't exist
+
+ MySQL  localhost:3306  nor  SQL > desc orderdetails;
++-----------+---------------+------+-----+---------+-------+
+| Field     | Type          | Null | Key | Default | Extra |
++-----------+---------------+------+-----+---------+-------+
+| OrderID   | int(11)       | NO   | PRI | NULL    |       |
+| ProductID | int(11)       | NO   | PRI | NULL    |       |
+| UnitPrice | decimal(10,4) | NO   |     | 0.0000  |       |
+| Quantity  | smallint(2)   | NO   |     | 1       |       |
+| Discount  | double(8,0)   | NO   |     | 0       |       |
++-----------+---------------+------+-----+---------+-------+
+5 rows in set (0.3737 sec)
+
+ MySQL  localhost:3306  nor  SQL > select max(unitprice) from orderdetails;
++----------------+
+| max(unitprice) |
++----------------+
+|       263.5000 |
++----------------+
+1 row in set (0.0846 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname from customers a
+                               ... inner join ;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 2
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,c.unitprice from customers a
+                               ... inner join orders b on a.customerid=b.customerid
+                               ... inner join orderdetails c on b.orderid=c.orderid
+                               ... where c.unitprice=(select max(c.unitprice))
+                               ... ;
++-------------------------+-----------+
+| contactname             | unitprice |
++-------------------------+-----------+
+| Maria Anders            |   45.6000 |
+| Maria Anders            |   18.0000 |
+| Maria Anders            |   12.0000 |
+| Maria Anders            |   43.9000 |
+| Maria Anders            |   10.0000 |
+| Maria Anders            |   18.0000 |
+| Maria Anders            |   55.0000 |
+| Maria Anders            |   13.0000 |
+| Maria Anders            |   25.0000 |
+| Maria Anders            |   45.6000 |
+| Maria Anders            |   13.2500 |
+| Maria Anders            |   21.5000 |
+| Ana Trujillo            |   28.8000 |
+| Ana Trujillo            |   12.0000 |
+| Ana Trujillo            |   23.2500 |
+| Ana Trujillo            |   14.0000 |
+| Ana Trujillo            |   34.0000 |
+| Ana Trujillo            |   32.0000 |
+| Ana Trujillo            |   21.0000 |
+| Ana Trujillo            |    6.0000 |
+| Ana Trujillo            |    9.2000 |
+| Ana Trujillo            |   34.8000 |
+| Antonio Moreno          |   16.8000 |
+| Antonio Moreno          |   46.0000 |
+| Antonio Moreno          |   12.7500 |
+| Antonio Moreno          |   21.0000 |
+| Antonio Moreno          |   18.4000 |
+| Antonio Moreno          |   19.5000 |
+| Antonio Moreno          |   55.0000 |
+| Antonio Moreno          |   39.0000 |
+| Antonio Moreno          |   14.0000 |
+| Antonio Moreno          |   32.8000 |
+| Antonio Moreno          |   31.2300 |
+| Antonio Moreno          |    2.5000 |
+| Antonio Moreno          |    2.5000 |
+| Antonio Moreno          |   17.0000 |
+| Antonio Moreno          |    7.7500 |
+| Antonio Moreno          |   19.0000 |
+| Antonio Moreno          |   14.0000 |
+| Thomas Hardy            |    3.6000 |
+| Thomas Hardy            |   15.6000 |
+| Thomas Hardy            |    4.8000 |
+| Thomas Hardy            |   13.0000 |
+| Thomas Hardy            |   30.4000 |
+| Thomas Hardy            |   10.2000 |
+| Thomas Hardy            |   12.0000 |
+| Thomas Hardy            |    9.5000 |
+| Thomas Hardy            |   53.0000 |
+| Thomas Hardy            |    7.0000 |
+| Thomas Hardy            |   32.8000 |
+| Thomas Hardy            |   15.0000 |
+| Thomas Hardy            |   24.0000 |
+| Thomas Hardy            |   19.5000 |
+| Thomas Hardy            |   15.0000 |
+| Thomas Hardy            |   19.0000 |
+| Thomas Hardy            |   12.0000 |
+| Thomas Hardy            |   21.0000 |
+| Thomas Hardy            |   12.5000 |
+| Thomas Hardy            |   34.0000 |
+| Thomas Hardy            |   21.5000 |
+| Thomas Hardy            |    9.6500 |
+| Thomas Hardy            |    7.0000 |
+| Thomas Hardy            |   18.0000 |
+| Thomas Hardy            |   14.0000 |
+| Thomas Hardy            |   16.2500 |
+| Thomas Hardy            |   81.0000 |
+| Thomas Hardy            |   12.5000 |
+| Thomas Hardy            |   12.5000 |
+| Thomas Hardy            |   19.0000 |
+| Christina Berglund      |   15.5000 |
+| Christina Berglund      |   44.0000 |
+| Christina Berglund      |   35.1000 |
+| Christina Berglund      |   12.0000 |
+| Christina Berglund      |    3.6000 |
+| Christina Berglund      |   19.2000 |
+| Christina Berglund      |    6.2000 |
+| Christina Berglund      |   64.8000 |
+| Christina Berglund      |   27.2000 |
+| Christina Berglund      |   31.2000 |
+| Christina Berglund      |   24.9000 |
+| Christina Berglund      |   14.4000 |
+| Christina Berglund      |    7.7000 |
+| Christina Berglund      |   14.4000 |
+| Christina Berglund      |    5.9000 |
+| Christina Berglund      |   31.0000 |
+| Christina Berglund      |   25.8900 |
+| Christina Berglund      |   46.0000 |
+| Christina Berglund      |    7.4500 |
+| Christina Berglund      |   17.4500 |
+| Christina Berglund      |   32.0000 |
+| Christina Berglund      |   18.4000 |
+| Christina Berglund      |    7.7500 |
+| Christina Berglund      |   32.8000 |
+| Christina Berglund      |   34.0000 |
+| Christina Berglund      |   21.5000 |
+| Christina Berglund      |   22.0000 |
+| Christina Berglund      |   18.0000 |
+| Christina Berglund      |    7.4500 |
+| Christina Berglund      |  263.5000 |
+| Christina Berglund      |   21.5000 |
+| Christina Berglund      |   18.0000 |
+| Christina Berglund      |   23.2500 |
+| Christina Berglund      |   45.6000 |
+| Christina Berglund      |    7.0000 |
+| Christina Berglund      |    9.6500 |
+| Christina Berglund      |    6.0000 |
+| Christina Berglund      |   18.4000 |
+| Christina Berglund      |    9.5000 |
+| Christina Berglund      |   18.0000 |
+| Christina Berglund      |   10.0000 |
+| Christina Berglund      |   31.2300 |
+| Christina Berglund      |  123.7900 |
+| Christina Berglund      |   19.0000 |
+| Christina Berglund      |    4.5000 |
+| Christina Berglund      |   25.8900 |
+| Christina Berglund      |    9.2000 |
+| Christina Berglund      |    9.5000 |
+| Christina Berglund      |   20.0000 |
+| Christina Berglund      |   31.0000 |
+| Christina Berglund      |   45.6000 |
+| Christina Berglund      |    7.7500 |
+| Hanna Moos              |    7.4500 |
+| Hanna Moos              |   45.6000 |
+| Hanna Moos              |   19.5000 |
+| Hanna Moos              |   18.0000 |
+| Hanna Moos              |   21.0000 |
+| Hanna Moos              |   10.0000 |
+| Hanna Moos              |   18.0000 |
+| Hanna Moos              |   62.5000 |
+| Hanna Moos              |   10.0000 |
+| Hanna Moos              |    9.5000 |
+| Hanna Moos              |   53.0000 |
+| Hanna Moos              |   10.0000 |
+| Hanna Moos              |   34.0000 |
+| Hanna Moos              |   28.5000 |
+| Frdrique Citeaux        |   31.2000 |
+| Frdrique Citeaux        |   12.0000 |
+| Frdrique Citeaux        |   14.4000 |
+| Frdrique Citeaux        |   27.8000 |
+| Frdrique Citeaux        |   36.4000 |
+| Frdrique Citeaux        |   99.0000 |
+| Frdrique Citeaux        |  210.8000 |
+| Frdrique Citeaux        |   16.0000 |
+| Frdrique Citeaux        |    5.9000 |
+| Frdrique Citeaux        |    9.6000 |
+| Frdrique Citeaux        |   30.4000 |
+| Frdrique Citeaux        |   26.6000 |
+| Frdrique Citeaux        |    6.2000 |
+| Frdrique Citeaux        |   24.8000 |
+| Frdrique Citeaux        |    5.6000 |
+| Frdrique Citeaux        |   39.4000 |
+| Frdrique Citeaux        |    9.6500 |
+| Frdrique Citeaux        |   24.0000 |
+| Frdrique Citeaux        |   21.0000 |
+| Frdrique Citeaux        |   62.5000 |
+| Frdrique Citeaux        |   18.0000 |
+| Frdrique Citeaux        |   12.5000 |
+| Frdrique Citeaux        |   18.0000 |
+| Frdrique Citeaux        |   55.0000 |
+| Frdrique Citeaux        |   12.5000 |
+| Frdrique Citeaux        |   19.5000 |
+| Martn Sommer            |   17.6000 |
+| Martn Sommer            |   15.6000 |
+| Martn Sommer            |    6.2000 |
+| Martn Sommer            |   39.0000 |
+| Martn Sommer            |  123.7900 |
+| Martn Sommer            |    7.0000 |
+| Laurence Lebihan        |    5.9000 |
+| Laurence Lebihan        |   50.0000 |
+| Laurence Lebihan        |    7.7000 |
+| Laurence Lebihan        |   36.8000 |
+| Laurence Lebihan        |   11.2000 |
+| Laurence Lebihan        |   42.4000 |
+| Laurence Lebihan        |    5.9000 |
+| Laurence Lebihan        |   50.0000 |
+| Laurence Lebihan        |    7.2000 |
+| Laurence Lebihan        |   26.6000 |
+| Laurence Lebihan        |   22.0000 |
+| Laurence Lebihan        |   30.0000 |
+| Laurence Lebihan        |   40.0000 |
+| Laurence Lebihan        |   19.0000 |
+| Laurence Lebihan        |   18.4000 |
+| Laurence Lebihan        |   18.4000 |
+| Laurence Lebihan        |   14.0000 |
+| Laurence Lebihan        |   53.0000 |
+| Laurence Lebihan        |   31.0000 |
+| Laurence Lebihan        |   21.5000 |
+| Laurence Lebihan        |   17.4500 |
+| Laurence Lebihan        |   12.5000 |
+| Laurence Lebihan        |   21.0500 |
+| Laurence Lebihan        |   18.0000 |
+| Laurence Lebihan        |    9.5000 |
+| Laurence Lebihan        |   38.0000 |
+| Laurence Lebihan        |   19.5000 |
+| Laurence Lebihan        |   36.0000 |
+| Laurence Lebihan        |   31.0000 |
+| Laurence Lebihan        |   18.0000 |
+| Laurence Lebihan        |   25.0000 |
+| Laurence Lebihan        |   17.4500 |
+| Laurence Lebihan        |   39.0000 |
+| Laurence Lebihan        |   12.0000 |
+| Laurence Lebihan        |   33.2500 |
+| Laurence Lebihan        |   17.4500 |
+| Laurence Lebihan        |   49.3000 |
+| Laurence Lebihan        |   34.8000 |
+| Laurence Lebihan        |    7.7500 |
+| Laurence Lebihan        |   30.0000 |
+| Laurence Lebihan        |    6.0000 |
+| Laurence Lebihan        |   25.0000 |
+| Laurence Lebihan        |   23.2500 |
+| Laurence Lebihan        |    9.2000 |
+| Elizabeth Lincoln       |   24.8000 |
+| Elizabeth Lincoln       |   19.2000 |
+| Elizabeth Lincoln       |   39.4000 |
+| Elizabeth Lincoln       |   12.0000 |
+| Elizabeth Lincoln       |    2.0000 |
+| Elizabeth Lincoln       |   44.0000 |
+| Elizabeth Lincoln       |    7.7000 |
+| Elizabeth Lincoln       |   15.5000 |
+| Elizabeth Lincoln       |   44.0000 |
+| Elizabeth Lincoln       |   31.2000 |
+| Elizabeth Lincoln       |   14.7000 |
+| Elizabeth Lincoln       |    7.6000 |
+| Elizabeth Lincoln       |   11.2000 |
+| Elizabeth Lincoln       |   11.2000 |
+| Elizabeth Lincoln       |   10.0000 |
+| Elizabeth Lincoln       |   34.0000 |
+| Elizabeth Lincoln       |   34.8000 |
+| Elizabeth Lincoln       |   18.0000 |
+| Elizabeth Lincoln       |   34.0000 |
+| Elizabeth Lincoln       |   21.0000 |
+| Elizabeth Lincoln       |   19.4500 |
+| Elizabeth Lincoln       |   38.0000 |
+| Elizabeth Lincoln       |   25.0000 |
+| Elizabeth Lincoln       |   31.0000 |
+| Elizabeth Lincoln       |   39.0000 |
+| Elizabeth Lincoln       |   49.3000 |
+| Elizabeth Lincoln       |   40.0000 |
+| Elizabeth Lincoln       |    7.7500 |
+| Elizabeth Lincoln       |   30.0000 |
+| Elizabeth Lincoln       |   46.0000 |
+| Elizabeth Lincoln       |    4.5000 |
+| Elizabeth Lincoln       |   49.3000 |
+| Elizabeth Lincoln       |    2.5000 |
+| Elizabeth Lincoln       |   53.0000 |
+| Elizabeth Lincoln       |   12.5000 |
+| Victoria Ashworth       |    8.0000 |
+| Victoria Ashworth       |   26.6000 |
+| Victoria Ashworth       |   24.0000 |
+| Victoria Ashworth       |   30.4000 |
+| Victoria Ashworth       |    8.0000 |
+| Victoria Ashworth       |   14.7000 |
+| Victoria Ashworth       |   42.4000 |
+| Victoria Ashworth       |   15.0000 |
+| Victoria Ashworth       |   34.8000 |
+| Victoria Ashworth       |    6.0000 |
+| Victoria Ashworth       |   10.0000 |
+| Victoria Ashworth       |    2.5000 |
+| Victoria Ashworth       |   20.0000 |
+| Victoria Ashworth       |   18.0000 |
+| Victoria Ashworth       |   19.5000 |
+| Victoria Ashworth       |   49.3000 |
+| Victoria Ashworth       |    6.0000 |
+| Victoria Ashworth       |   21.0000 |
+| Victoria Ashworth       |   12.0000 |
+| Victoria Ashworth       |   55.0000 |
+| Victoria Ashworth       |   30.0000 |
+| Victoria Ashworth       |   46.0000 |
+| Patricio Simpson        |   18.0000 |
+| Patricio Simpson        |    9.6500 |
+| Patricio Simpson        |   12.5000 |
+| Patricio Simpson        |   12.5000 |
+| Patricio Simpson        |   46.0000 |
+| Patricio Simpson        |    7.7500 |
+| Patricio Simpson        |   15.0000 |
+| Patricio Simpson        |   45.6000 |
+| Patricio Simpson        |   14.0000 |
+| Patricio Simpson        |    2.5000 |
+| Patricio Simpson        |   14.0000 |
+| Francisco Chang         |    8.0000 |
+| Francisco Chang         |   20.8000 |
+| Yang Wang               |    3.6000 |
+| Yang Wang               |   19.2000 |
+| Yang Wang               |    8.0000 |
+| Yang Wang               |   14.4000 |
+| Yang Wang               |   26.6000 |
+| Yang Wang               |    8.0000 |
+| Yang Wang               |   31.0000 |
+| Yang Wang               |   38.0000 |
+| Yang Wang               |   34.0000 |
+| Yang Wang               |   10.0000 |
+| Yang Wang               |   53.0000 |
+| Yang Wang               |    6.0000 |
+| Yang Wang               |   14.0000 |
+| Yang Wang               |   49.3000 |
+| Yang Wang               |   36.0000 |
+| Yang Wang               |   26.0000 |
+| Yang Wang               |   38.0000 |
+| Yang Wang               |   49.3000 |
+| Yang Wang               |   38.0000 |
+| Yang Wang               |   43.9000 |
+| Yang Wang               |   19.0000 |
+| Yang Wang               |   43.9000 |
+| Pedro Afonso            |   17.0000 |
+| Pedro Afonso            |   99.0000 |
+| Pedro Afonso            |   16.0000 |
+| Pedro Afonso            |   10.4000 |
+| Pedro Afonso            |   16.8000 |
+| Pedro Afonso            |    9.6000 |
+| Pedro Afonso            |   30.4000 |
+| Pedro Afonso            |   12.0000 |
+| Pedro Afonso            |   19.4500 |
+| Pedro Afonso            |   28.5000 |
+| Elizabeth Brown         |   15.2000 |
+| Elizabeth Brown         |   16.8000 |
+| Elizabeth Brown         |   27.8000 |
+| Elizabeth Brown         |    4.8000 |
+| Elizabeth Brown         |    7.2000 |
+| Elizabeth Brown         |   21.3500 |
+| Elizabeth Brown         |   97.0000 |
+| Sven Ottlieb            |   10.0000 |
+| Sven Ottlieb            |    6.2000 |
+| Sven Ottlieb            |   14.4000 |
+| Sven Ottlieb            |    4.8000 |
+| Sven Ottlieb            |   21.0000 |
+| Sven Ottlieb            |   31.2300 |
+| Sven Ottlieb            |   32.8000 |
+| Sven Ottlieb            |    6.0000 |
+| Sven Ottlieb            |   55.0000 |
+| Sven Ottlieb            |    9.6500 |
+| Janine Labrune          |   11.2000 |
+| Janine Labrune          |   28.8000 |
+| Janine Labrune          |   18.0000 |
+| Janine Labrune          |   31.0000 |
+| Janine Labrune          |   10.0000 |
+| Janine Labrune          |    7.0000 |
+| Janine Labrune          |   39.0000 |
+| Janine Labrune          |   14.0000 |
+| Janine Labrune          |    9.6500 |
+| Ann Devon               |   28.8000 |
+| Ann Devon               |   17.2000 |
+| Ann Devon               |   99.0000 |
+| Ann Devon               |   14.4000 |
+| Ann Devon               |   16.0000 |
+| Ann Devon               |   25.8900 |
+| Ann Devon               |   17.0000 |
+| Ann Devon               |   22.0000 |
+| Ann Devon               |   21.0000 |
+| Ann Devon               |   30.0000 |
+| Ann Devon               |   46.0000 |
+| Ann Devon               |   34.8000 |
+| Ann Devon               |   31.2300 |
+| Ann Devon               |    2.5000 |
+| Ann Devon               |   21.0500 |
+| Ann Devon               |   21.5000 |
+| Ann Devon               |   18.0000 |
+| Ann Devon               |   21.3500 |
+| Ann Devon               |   30.0000 |
+| Ann Devon               |   24.0000 |
+| Ann Devon               |   34.0000 |
+| Roland Mendel           |   15.2000 |
+| Roland Mendel           |   17.0000 |
+| Roland Mendel           |   25.6000 |
+| Roland Mendel           |  210.8000 |
+| Roland Mendel           |    7.7000 |
+| Roland Mendel           |   15.5000 |
+| Roland Mendel           |   16.8000 |
+| Roland Mendel           |    8.0000 |
+| Roland Mendel           |   36.4000 |
+| Roland Mendel           |   15.6000 |
+| Roland Mendel           |   26.6000 |
+| Roland Mendel           |   17.0000 |
+| Roland Mendel           |   50.0000 |
+| Roland Mendel           |   99.0000 |
+| Roland Mendel           |    2.0000 |
+| Roland Mendel           |    8.0000 |
+| Roland Mendel           |   10.0000 |
+| Roland Mendel           |   14.4000 |
+| Roland Mendel           |    9.6000 |
+| Roland Mendel           |   27.8000 |
+| Roland Mendel           |    7.2000 |
+| Roland Mendel           |   35.1000 |
+| Roland Mendel           |   13.9000 |
+| Roland Mendel           |   10.2000 |
+| Roland Mendel           |   31.2000 |
+| Roland Mendel           |    8.0000 |
+| Roland Mendel           |   30.4000 |
+| Roland Mendel           |   44.0000 |
+| Roland Mendel           |   16.8000 |
+| Roland Mendel           |    5.9000 |
+| Roland Mendel           |   13.6000 |
+| Roland Mendel           |   81.0000 |
+| Roland Mendel           |   45.6000 |
+| Roland Mendel           |   38.0000 |
+| Roland Mendel           |   21.0500 |
+| Roland Mendel           |    7.7500 |
+| Roland Mendel           |   23.2500 |
+| Roland Mendel           |   14.0000 |
+| Roland Mendel           |   18.0000 |
+| Roland Mendel           |   28.5000 |
+| Roland Mendel           |   36.0000 |
+| Roland Mendel           |   38.0000 |
+| Roland Mendel           |    6.0000 |
+| Roland Mendel           |   31.2300 |
+| Roland Mendel           |   49.3000 |
+| Roland Mendel           |   36.0000 |
+| Roland Mendel           |   21.5000 |
+| Roland Mendel           |   21.0000 |
+| Roland Mendel           |   39.0000 |
+| Roland Mendel           |  123.7900 |
+| Roland Mendel           |   21.0500 |
+| Roland Mendel           |   15.0000 |
+| Roland Mendel           |   10.0000 |
+| Roland Mendel           |   18.0000 |
+| Roland Mendel           |   21.5000 |
+| Roland Mendel           |   39.0000 |
+| Roland Mendel           |   12.5000 |
+| Roland Mendel           |    7.7500 |
+| Roland Mendel           |   12.5000 |
+| Roland Mendel           |   14.0000 |
+| Roland Mendel           |    9.5000 |
+| Roland Mendel           |   53.0000 |
+| Roland Mendel           |   17.4500 |
+| Roland Mendel           |   39.0000 |
+| Roland Mendel           |   21.0000 |
+| Roland Mendel           |   18.0000 |
+| Roland Mendel           |   19.5000 |
+| Roland Mendel           |   34.0000 |
+| Roland Mendel           |   33.2500 |
+| Roland Mendel           |   31.0000 |
+| Roland Mendel           |    6.0000 |
+| Roland Mendel           |    4.5000 |
+| Roland Mendel           |   18.0000 |
+| Roland Mendel           |   18.4000 |
+| Roland Mendel           |   34.0000 |
+| Roland Mendel           |   38.0000 |
+| Roland Mendel           |    4.5000 |
+| Roland Mendel           |   33.2500 |
+| Roland Mendel           |   30.0000 |
+| Roland Mendel           |   38.0000 |
+| Roland Mendel           |    4.5000 |
+| Roland Mendel           |   43.9000 |
+| Roland Mendel           |   12.5000 |
+| Roland Mendel           |   43.9000 |
+| Roland Mendel           |   10.0000 |
+| Roland Mendel           |   14.0000 |
+| Roland Mendel           |   24.0000 |
+| Roland Mendel           |   28.5000 |
+| Roland Mendel           |   45.6000 |
+| Roland Mendel           |   14.0000 |
+| Roland Mendel           |   21.5000 |
+| Roland Mendel           |   10.0000 |
+| Roland Mendel           |   55.0000 |
+| Roland Mendel           |   15.0000 |
+| Roland Mendel           |   19.0000 |
+| Roland Mendel           |    9.6500 |
+| Roland Mendel           |   16.2500 |
+| Roland Mendel           |   33.2500 |
+| Aria Cruz               |   11.2000 |
+| Aria Cruz               |   14.4000 |
+| Aria Cruz               |   14.7000 |
+| Aria Cruz               |    6.2000 |
+| Aria Cruz               |    3.6000 |
+| Aria Cruz               |   11.2000 |
+| Aria Cruz               |    7.3000 |
+| Aria Cruz               |    2.0000 |
+| Aria Cruz               |    4.5000 |
+| Aria Cruz               |   12.0000 |
+| Aria Cruz               |    9.5000 |
+| Aria Cruz               |   34.0000 |
+| Aria Cruz               |    7.7500 |
+| Aria Cruz               |   25.8900 |
+| Aria Cruz               |   32.8000 |
+| Aria Cruz               |    7.4500 |
+| Aria Cruz               |    9.6500 |
+| Aria Cruz               |    7.0000 |
+| Aria Cruz               |   24.0000 |
+| Martine Ranc            |   20.8000 |
+| Martine Ranc            |    5.9000 |
+| Martine Ranc            |   39.4000 |
+| Martine Ranc            |    7.6000 |
+| Martine Ranc            |   44.0000 |
+| Martine Ranc            |   30.0000 |
+| Martine Ranc            |   62.5000 |
+| Martine Ranc            |   53.0000 |
+| Martine Ranc            |    7.7500 |
+| Martine Ranc            |   10.0000 |
+| Martine Ranc            |   21.0000 |
+| Martine Ranc            |    4.5000 |
+| Martine Ranc            |   62.5000 |
+| Martine Ranc            |   18.0000 |
+| Martine Ranc            |   43.9000 |
+| Martine Ranc            |   12.5000 |
+| Maria Larsson           |   15.2000 |
+| Maria Larsson           |   16.8000 |
+| Maria Larsson           |   20.7000 |
+| Maria Larsson           |   10.6000 |
+| Maria Larsson           |   17.2000 |
+| Maria Larsson           |   16.8000 |
+| Maria Larsson           |   14.4000 |
+| Maria Larsson           |   10.0000 |
+| Maria Larsson           |    6.2000 |
+| Maria Larsson           |   22.0000 |
+| Maria Larsson           |   34.8000 |
+| Maria Larsson           |   15.0000 |
+| Maria Larsson           |   19.4500 |
+| Maria Larsson           |   53.0000 |
+| Maria Larsson           |   19.0000 |
+| Maria Larsson           |   55.0000 |
+| Maria Larsson           |   15.0000 |
+| Maria Larsson           |   18.0000 |
+| Maria Larsson           |    9.5000 |
+| Maria Larsson           |   53.0000 |
+| Maria Larsson           |   38.0000 |
+| Maria Larsson           |   12.5000 |
+| Maria Larsson           |   17.0000 |
+| Maria Larsson           |    9.6500 |
+| Maria Larsson           |   15.0000 |
+| Maria Larsson           |    9.0000 |
+| Maria Larsson           |   28.5000 |
+| Maria Larsson           |   15.0000 |
+| Maria Larsson           |   24.0000 |
+| Maria Larsson           |   49.3000 |
+| Maria Larsson           |    7.7500 |
+| Maria Larsson           |   18.0000 |
+| Maria Larsson           |    9.5000 |
+| Maria Larsson           |   53.0000 |
+| Maria Larsson           |   43.9000 |
+| Maria Larsson           |    7.7500 |
+| Maria Larsson           |  123.7900 |
+| Maria Larsson           |    9.6500 |
+| Maria Larsson           |   30.0000 |
+| Maria Larsson           |   21.0000 |
+| Maria Larsson           |   12.0000 |
+| Maria Larsson           |   24.0000 |
+| Maria Larsson           |   18.0000 |
+| Peter Franken           |   14.7000 |
+| Peter Franken           |   44.0000 |
+| Peter Franken           |   14.4000 |
+| Peter Franken           |    7.2000 |
+| Peter Franken           |   24.9000 |
+| Peter Franken           |   15.2000 |
+| Peter Franken           |   20.8000 |
+| Peter Franken           |   27.8000 |
+| Peter Franken           |   15.2000 |
+| Peter Franken           |   10.0000 |
+| Peter Franken           |   15.2000 |
+| Peter Franken           |   19.2000 |
+| Peter Franken           |    7.2000 |
+| Peter Franken           |   17.2000 |
+| Peter Franken           |   27.8000 |
+| Peter Franken           |   44.0000 |
+| Peter Franken           |   12.0000 |
+| Peter Franken           |   25.8900 |
+| Peter Franken           |   49.3000 |
+| Peter Franken           |   23.2500 |
+| Peter Franken           |    9.2000 |
+| Peter Franken           |   10.0000 |
+| Peter Franken           |    4.5000 |
+| Peter Franken           |   18.0000 |
+| Peter Franken           |   17.4500 |
+| Peter Franken           |   34.0000 |
+| Peter Franken           |    9.0000 |
+| Peter Franken           |   12.0000 |
+| Peter Franken           |   14.0000 |
+| Peter Franken           |   15.0000 |
+| Peter Franken           |    7.7500 |
+| Peter Franken           |   23.2500 |
+| Peter Franken           |   32.8000 |
+| Peter Franken           |   13.2500 |
+| Peter Franken           |   10.0000 |
+| Peter Franken           |    7.4500 |
+| Peter Franken           |   36.0000 |
+| Peter Franken           |  123.7900 |
+| Peter Franken           |    9.6500 |
+| Peter Franken           |    4.5000 |
+| Peter Franken           |    7.4500 |
+| Peter Franken           |   33.2500 |
+| Peter Franken           |   10.0000 |
+| Peter Franken           |    7.7500 |
+| Peter Franken           |   13.0000 |
+| Peter Franken           |    9.2000 |
+| Peter Franken           |   34.0000 |
+| Peter Franken           |   21.5000 |
+| Carine Schmitt          |   17.4500 |
+| Carine Schmitt          |   49.3000 |
+| Carine Schmitt          |   21.0500 |
+| Carine Schmitt          |   53.0000 |
+| Carine Schmitt          |   18.0000 |
+| Carine Schmitt          |  123.7900 |
+| Paolo Accorti           |   24.9000 |
+| Paolo Accorti           |    9.2000 |
+| Paolo Accorti           |    9.5000 |
+| Paolo Accorti           |    9.5000 |
+| Paolo Accorti           |   10.0000 |
+| Paolo Accorti           |   18.4000 |
+| Paolo Accorti           |   62.5000 |
+| Paolo Accorti           |   53.0000 |
+| Paolo Accorti           |   34.0000 |
+| Paolo Accorti           |   13.0000 |
+| Lino Rodriguez          |   44.0000 |
+| Lino Rodriguez          |   16.8000 |
+| Lino Rodriguez          |   10.0000 |
+| Lino Rodriguez          |    3.6000 |
+| Lino Rodriguez          |    5.9000 |
+| Lino Rodriguez          |   17.6000 |
+| Lino Rodriguez          |   36.8000 |
+| Lino Rodriguez          |   30.4000 |
+| Lino Rodriguez          |   27.2000 |
+| Lino Rodriguez          |   15.5000 |
+| Lino Rodriguez          |   10.4000 |
+| Lino Rodriguez          |   17.4500 |
+| Lino Rodriguez          |   18.0000 |
+| Lino Rodriguez          |   19.4500 |
+| Lino Rodriguez          |   12.7500 |
+| Lino Rodriguez          |   18.0000 |
+| Lino Rodriguez          |   31.0000 |
+| Lino Rodriguez          |   38.0000 |
+| Lino Rodriguez          |   21.0500 |
+| Lino Rodriguez          |   34.0000 |
+| Eduardo Saavedra        |   16.8000 |
+| Eduardo Saavedra        |   10.4000 |
+| Eduardo Saavedra        |   30.4000 |
+| Eduardo Saavedra        |   26.6000 |
+| Eduardo Saavedra        |   31.0000 |
+| Eduardo Saavedra        |   14.0000 |
+| Eduardo Saavedra        |    9.5000 |
+| Eduardo Saavedra        |   18.0000 |
+| Jos Pedro Freyre        |   14.7000 |
+| Jos Pedro Freyre        |   16.8000 |
+| Jos Pedro Freyre        |   10.0000 |
+| Jos Pedro Freyre        |   39.0000 |
+| Jos Pedro Freyre        |    9.2000 |
+| Jos Pedro Freyre        |   10.0000 |
+| Jos Pedro Freyre        |   28.5000 |
+| Jos Pedro Freyre        |  123.7900 |
+| Jos Pedro Freyre        |   33.2500 |
+| Jos Pedro Freyre        |   24.0000 |
+| Jos Pedro Freyre        |   49.3000 |
+| Jos Pedro Freyre        |   33.2500 |
+| Jos Pedro Freyre        |   21.0500 |
+| Jos Pedro Freyre        |   31.0000 |
+| Jos Pedro Freyre        |   19.0000 |
+| Jos Pedro Freyre        |   12.5000 |
+| Jos Pedro Freyre        |   18.0000 |
+| Jos Pedro Freyre        |   39.0000 |
+| Jos Pedro Freyre        |   14.0000 |
+| Jos Pedro Freyre        |   16.2500 |
+| Jos Pedro Freyre        |   53.0000 |
+| Jos Pedro Freyre        |   24.0000 |
+| Jos Pedro Freyre        |    4.5000 |
+| Jos Pedro Freyre        |   19.0000 |
+| Jos Pedro Freyre        |   34.0000 |
+| Jos Pedro Freyre        |   15.0000 |
+| Andr Fonseca            |   10.0000 |
+| Andr Fonseca            |   44.0000 |
+| Andr Fonseca            |   25.8900 |
+| Andr Fonseca            |   14.0000 |
+| Andr Fonseca            |   31.0000 |
+| Andr Fonseca            |    9.6500 |
+| Andr Fonseca            |    9.5000 |
+| Andr Fonseca            |   40.0000 |
+| Andr Fonseca            |   53.0000 |
+| Andr Fonseca            |   34.0000 |
+| Andr Fonseca            |   25.0000 |
+| Andr Fonseca            |   25.8900 |
+| Andr Fonseca            |   18.0000 |
+| Andr Fonseca            |   14.0000 |
+| Andr Fonseca            |   30.0000 |
+| Andr Fonseca            |   38.0000 |
+| Andr Fonseca            |    7.7500 |
+| Andr Fonseca            |   19.0000 |
+| Andr Fonseca            |   38.0000 |
+| Howard Snyder           |   21.0000 |
+| Howard Snyder           |    2.5000 |
+| Howard Snyder           |   34.8000 |
+| Howard Snyder           |   18.0000 |
+| Howard Snyder           |  263.5000 |
+| Howard Snyder           |   38.0000 |
+| Howard Snyder           |   15.0000 |
+| Howard Snyder           |   21.5000 |
+| Howard Snyder           |   55.0000 |
+| Howard Snyder           |   23.2500 |
+| Howard Snyder           |   19.4500 |
+| Howard Snyder           |    9.5000 |
+| Howard Snyder           |    9.2000 |
+| Howard Snyder           |   10.0000 |
+| Howard Snyder           |   33.2500 |
+| Howard Snyder           |  263.5000 |
+| Howard Snyder           |   49.3000 |
+| Howard Snyder           |   19.0000 |
+| Howard Snyder           |   18.0000 |
+| Howard Snyder           |  123.7900 |
+| Howard Snyder           |   10.0000 |
+| Howard Snyder           |   34.0000 |
+| Manuel Pereira          |   99.0000 |
+| Manuel Pereira          |   27.8000 |
+| Manuel Pereira          |   31.0000 |
+| Manuel Pereira          |    7.7500 |
+| Mario Pontes            |    7.7000 |
+| Mario Pontes            |   42.4000 |
+| Mario Pontes            |   16.8000 |
+| Mario Pontes            |   10.0000 |
+| Mario Pontes            |   14.4000 |
+| Mario Pontes            |   16.0000 |
+| Mario Pontes            |    4.5000 |
+| Mario Pontes            |  263.5000 |
+| Mario Pontes            |   21.0500 |
+| Mario Pontes            |   21.5000 |
+| Mario Pontes            |   62.5000 |
+| Mario Pontes            |   19.0000 |
+| Mario Pontes            |   38.0000 |
+| Mario Pontes            |   13.0000 |
+| Mario Pontes            |   21.0000 |
+| Mario Pontes            |   12.5000 |
+| Mario Pontes            |  263.5000 |
+| Mario Pontes            |   31.0000 |
+| Mario Pontes            |   12.5000 |
+| Mario Pontes            |   13.0000 |
+| Mario Pontes            |    6.0000 |
+| Mario Pontes            |   21.0500 |
+| Mario Pontes            |   12.5000 |
+| Mario Pontes            |   39.0000 |
+| Mario Pontes            |    4.5000 |
+| Mario Pontes            |   19.0000 |
+| Mario Pontes            |    7.0000 |
+| Mario Pontes            |  263.5000 |
+| Mario Pontes            |    9.2000 |
+| Mario Pontes            |   36.0000 |
+| Mario Pontes            |   46.0000 |
+| Mario Pontes            |   28.5000 |
+| Carlos Hernndez         |   35.1000 |
+| Carlos Hernndez         |   14.4000 |
+| Carlos Hernndez         |   10.4000 |
+| Carlos Hernndez         |    9.6000 |
+| Carlos Hernndez         |   26.2000 |
+| Carlos Hernndez         |   28.8000 |
+| Carlos Hernndez         |   19.2000 |
+| Carlos Hernndez         |   12.0000 |
+| Carlos Hernndez         |   16.8000 |
+| Carlos Hernndez         |   42.4000 |
+| Carlos Hernndez         |    8.0000 |
+| Carlos Hernndez         |   44.0000 |
+| Carlos Hernndez         |   10.0000 |
+| Carlos Hernndez         |    6.2000 |
+| Carlos Hernndez         |    4.5000 |
+| Carlos Hernndez         |   18.4000 |
+| Carlos Hernndez         |   14.0000 |
+| Carlos Hernndez         |   36.0000 |
+| Carlos Hernndez         |    7.7500 |
+| Carlos Hernndez         |    6.0000 |
+| Carlos Hernndez         |   55.0000 |
+| Carlos Hernndez         |    6.0000 |
+| Carlos Hernndez         |    7.7500 |
+| Carlos Hernndez         |   19.0000 |
+| Carlos Hernndez         |   18.4000 |
+| Carlos Hernndez         |   12.5000 |
+| Carlos Hernndez         |   32.0000 |
+| Carlos Hernndez         |   31.2300 |
+| Carlos Hernndez         |   19.4500 |
+| Carlos Hernndez         |   33.2500 |
+| Carlos Hernndez         |   36.0000 |
+| Carlos Hernndez         |   18.0000 |
+| Carlos Hernndez         |   13.2500 |
+| Carlos Hernndez         |    9.6500 |
+| Carlos Hernndez         |   21.5000 |
+| Carlos Hernndez         |   25.8900 |
+| Carlos Hernndez         |   18.0000 |
+| Carlos Hernndez         |   33.2500 |
+| Carlos Hernndez         |    4.5000 |
+| Carlos Hernndez         |    9.6500 |
+| Carlos Hernndez         |   45.6000 |
+| Carlos Hernndez         |    4.5000 |
+| Carlos Hernndez         |   14.0000 |
+| Carlos Hernndez         |   53.0000 |
+| Carlos Hernndez         |   19.5000 |
+| Yoshi Latimer           |   18.6000 |
+| Yoshi Latimer           |    5.9000 |
+| Yoshi Latimer           |    4.8000 |
+| Yoshi Latimer           |   39.4000 |
+| Yoshi Latimer           |   31.2000 |
+| Yoshi Latimer           |    2.0000 |
+| Yoshi Latimer           |    7.4500 |
+| Yoshi Latimer           |   15.0000 |
+| Yoshi Latimer           |   81.0000 |
+| Patricia McKenna        |   15.2000 |
+| Patricia McKenna        |   15.2000 |
+| Patricia McKenna        |   44.0000 |
+| Patricia McKenna        |   39.4000 |
+| Patricia McKenna        |   17.6000 |
+| Patricia McKenna        |   20.0000 |
+| Patricia McKenna        |   11.2000 |
+| Patricia McKenna        |   36.8000 |
+| Patricia McKenna        |   17.2000 |
+| Patricia McKenna        |   15.2000 |
+| Patricia McKenna        |   10.0000 |
+| Patricia McKenna        |   25.6000 |
+| Patricia McKenna        |   42.4000 |
+| Patricia McKenna        |   10.6000 |
+| Patricia McKenna        |   17.2000 |
+| Patricia McKenna        |   20.7000 |
+| Patricia McKenna        |   26.2000 |
+| Patricia McKenna        |   27.2000 |
+| Patricia McKenna        |   12.0000 |
+| Patricia McKenna        |   13.0000 |
+| Patricia McKenna        |   35.1000 |
+| Patricia McKenna        |   23.2500 |
+| Patricia McKenna        |   21.0500 |
+| Patricia McKenna        |   62.5000 |
+| Patricia McKenna        |    9.6500 |
+| Patricia McKenna        |   14.0000 |
+| Patricia McKenna        |   12.5000 |
+| Patricia McKenna        |   53.0000 |
+| Patricia McKenna        |   55.0000 |
+| Patricia McKenna        |   18.0000 |
+| Patricia McKenna        |   31.0000 |
+| Patricia McKenna        |   21.5000 |
+| Patricia McKenna        |   13.0000 |
+| Patricia McKenna        |   18.0000 |
+| Patricia McKenna        |   13.2500 |
+| Patricia McKenna        |   97.0000 |
+| Patricia McKenna        |  123.7900 |
+| Patricia McKenna        |   19.0000 |
+| Patricia McKenna        |   55.0000 |
+| Patricia McKenna        |   21.5000 |
+| Patricia McKenna        |   18.0000 |
+| Patricia McKenna        |   32.8000 |
+| Patricia McKenna        |   38.0000 |
+| Patricia McKenna        |   21.0500 |
+| Patricia McKenna        |    7.7500 |
+| Patricia McKenna        |  123.7900 |
+| Patricia McKenna        |   25.8900 |
+| Patricia McKenna        |   21.0000 |
+| Patricia McKenna        |  123.7900 |
+| Patricia McKenna        |   17.4500 |
+| Patricia McKenna        |   62.5000 |
+| Patricia McKenna        |   32.0000 |
+| Patricia McKenna        |   14.0000 |
+| Patricia McKenna        |   18.4000 |
+| Patricia McKenna        |    9.6500 |
+| Helen Bennett           |   11.2000 |
+| Helen Bennett           |   12.0000 |
+| Helen Bennett           |    7.7000 |
+| Helen Bennett           |   14.4000 |
+| Helen Bennett           |   14.4000 |
+| Helen Bennett           |    2.0000 |
+| Helen Bennett           |   17.2000 |
+| Helen Bennett           |    9.2000 |
+| Helen Bennett           |    9.0000 |
+| Helen Bennett           |   15.0000 |
+| Helen Bennett           |   21.5000 |
+| Helen Bennett           |    9.0000 |
+| Helen Bennett           |   38.0000 |
+| Helen Bennett           |   55.0000 |
+| Helen Bennett           |   18.0000 |
+| Helen Bennett           |   49.3000 |
+| Helen Bennett           |   34.8000 |
+| Helen Bennett           |   19.0000 |
+| Helen Bennett           |   40.0000 |
+| Helen Bennett           |    6.0000 |
+| Helen Bennett           |   34.0000 |
+| Helen Bennett           |   32.8000 |
+| Helen Bennett           |   28.5000 |
+| Philip Cramer           |   12.4000 |
+| Philip Cramer           |   11.2000 |
+| Philip Cramer           |   14.4000 |
+| Philip Cramer           |   20.0000 |
+| Philip Cramer           |    4.8000 |
+| Philip Cramer           |   18.6000 |
+| Philip Cramer           |   10.0000 |
+| Philip Cramer           |   27.8000 |
+| Philip Cramer           |    8.0000 |
+| Philip Cramer           |   16.0000 |
+| Philip Cramer           |   44.0000 |
+| Philip Cramer           |   20.7000 |
+| Philip Cramer           |   36.8000 |
+| Philip Cramer           |   14.0000 |
+| Philip Cramer           |   15.0000 |
+| Philip Cramer           |   21.0000 |
+| Philip Cramer           |    7.4500 |
+| Philip Cramer           |   24.0000 |
+| Philip Cramer           |   18.0000 |
+| Philip Cramer           |   38.0000 |
+| Philip Cramer           |   17.4500 |
+| Philip Cramer           |   19.0000 |
+| Philip Cramer           |   49.3000 |
+| Philip Cramer           |    6.0000 |
+| Philip Cramer           |    4.5000 |
+| Philip Cramer           |   55.0000 |
+| Philip Cramer           |   31.2300 |
+| Philip Cramer           |  263.5000 |
+| Philip Cramer           |   18.4000 |
+| Philip Cramer           |   49.3000 |
+| Philip Cramer           |   10.0000 |
+| Philip Cramer           |   31.2300 |
+| Philip Cramer           |   40.0000 |
+| Philip Cramer           |    4.5000 |
+| Philip Cramer           |  123.7900 |
+| Philip Cramer           |   25.8900 |
+| Philip Cramer           |   19.0000 |
+| Philip Cramer           |   24.0000 |
+| Philip Cramer           |   55.0000 |
+| Daniel Tonini           |   30.0000 |
+| Daniel Tonini           |   43.9000 |
+| Daniel Tonini           |   15.0000 |
+| Daniel Tonini           |   81.0000 |
+| Daniel Tonini           |    7.0000 |
+| Daniel Tonini           |   18.0000 |
+| Daniel Tonini           |   39.0000 |
+| Daniel Tonini           |    2.5000 |
+| Daniel Tonini           |   31.2300 |
+| Daniel Tonini           |    9.6500 |
+| Daniel Tonini           |    7.7500 |
+| Annette Roulet          |   13.0000 |
+| Annette Roulet          |   28.8000 |
+| Annette Roulet          |    3.6000 |
+| Annette Roulet          |   11.2000 |
+| Annette Roulet          |   15.2000 |
+| Annette Roulet          |   15.2000 |
+| Annette Roulet          |   14.4000 |
+| Annette Roulet          |   39.4000 |
+| Annette Roulet          |   14.4000 |
+| Annette Roulet          |   19.2000 |
+| Annette Roulet          |   14.4000 |
+| Annette Roulet          |   13.9000 |
+| Annette Roulet          |    2.0000 |
+| Annette Roulet          |    9.6000 |
+| Annette Roulet          |   16.8000 |
+| Annette Roulet          |   13.6000 |
+| Annette Roulet          |   28.8000 |
+| Annette Roulet          |   15.5000 |
+| Annette Roulet          |   45.6000 |
+| Annette Roulet          |   19.0000 |
+| Annette Roulet          |    7.7500 |
+| Annette Roulet          |   19.0000 |
+| Annette Roulet          |  123.7900 |
+| Annette Roulet          |    6.0000 |
+| Annette Roulet          |   14.0000 |
+| Annette Roulet          |   19.4500 |
+| Annette Roulet          |   33.2500 |
+| Annette Roulet          |   14.0000 |
+| Annette Roulet          |   46.0000 |
+| Annette Roulet          |   14.0000 |
+| Annette Roulet          |    4.5000 |
+| Yoshi Tannamuri         |    7.2000 |
+| Yoshi Tannamuri         |    7.7000 |
+| Yoshi Tannamuri         |   10.4000 |
+| Yoshi Tannamuri         |    4.5000 |
+| Yoshi Tannamuri         |    7.0000 |
+| Yoshi Tannamuri         |    6.0000 |
+| Yoshi Tannamuri         |   14.0000 |
+| Yoshi Tannamuri         |   15.0000 |
+| John Steel              |   14.7000 |
+| John Steel              |   21.0000 |
+| Renate Messner          |   31.2000 |
+| Renate Messner          |   35.1000 |
+| Renate Messner          |   15.5000 |
+| Renate Messner          |   27.2000 |
+| Renate Messner          |   11.2000 |
+| Renate Messner          |   26.6000 |
+| Renate Messner          |   10.0000 |
+| Renate Messner          |   14.4000 |
+| Renate Messner          |   30.4000 |
+| Renate Messner          |   27.8000 |
+| Renate Messner          |   10.4000 |
+| Renate Messner          |   18.0000 |
+| Renate Messner          |   40.0000 |
+| Renate Messner          |   25.8900 |
+| Renate Messner          |   18.4000 |
+| Renate Messner          |   25.8900 |
+| Renate Messner          |   18.4000 |
+| Renate Messner          |    7.4500 |
+| Renate Messner          |   38.0000 |
+| Renate Messner          |   12.5000 |
+| Renate Messner          |    2.5000 |
+| Renate Messner          |   34.0000 |
+| Renate Messner          |   33.2500 |
+| Renate Messner          |    7.7500 |
+| Renate Messner          |   15.5000 |
+| Renate Messner          |   31.2300 |
+| Renate Messner          |   81.0000 |
+| Renate Messner          |   36.0000 |
+| Renate Messner          |   18.0000 |
+| Renate Messner          |  123.7900 |
+| Renate Messner          |   55.0000 |
+| Renate Messner          |   21.0000 |
+| Renate Messner          |    7.0000 |
+| Renate Messner          |   25.8900 |
+| Renate Messner          |   25.0000 |
+| Renate Messner          |   18.0000 |
+| Renate Messner          |   19.0000 |
+| Renate Messner          |   17.4500 |
+| Renate Messner          |   12.5000 |
+| Jaime Yorres            |   15.5000 |
+| Jaime Yorres            |    7.7500 |
+| Jaime Yorres            |   62.5000 |
+| Jaime Yorres            |   25.8900 |
+| Jaime Yorres            |    7.4500 |
+| Jaime Yorres            |   28.5000 |
+| Jaime Yorres            |   13.0000 |
+| Jaime Yorres            |   10.0000 |
+| Jaime Yorres            |   38.0000 |
+| Jaime Yorres            |   21.0500 |
+| Carlos Gonzlez          |   12.4000 |
+| Carlos Gonzlez          |    7.3000 |
+| Carlos Gonzlez          |   27.2000 |
+| Carlos Gonzlez          |   27.8000 |
+| Carlos Gonzlez          |   16.8000 |
+| Carlos Gonzlez          |   13.9000 |
+| Carlos Gonzlez          |   28.8000 |
+| Carlos Gonzlez          |   24.9000 |
+| Carlos Gonzlez          |   27.8000 |
+| Carlos Gonzlez          |   24.8000 |
+| Carlos Gonzlez          |   24.9000 |
+| Carlos Gonzlez          |   27.2000 |
+| Carlos Gonzlez          |    8.0000 |
+| Carlos Gonzlez          |    8.0000 |
+| Carlos Gonzlez          |   20.7000 |
+| Carlos Gonzlez          |   19.2000 |
+| Carlos Gonzlez          |   45.6000 |
+| Carlos Gonzlez          |   20.0000 |
+| Carlos Gonzlez          |   38.0000 |
+| Carlos Gonzlez          |    9.0000 |
+| Carlos Gonzlez          |   15.0000 |
+| Carlos Gonzlez          |   13.0000 |
+| Carlos Gonzlez          |   21.0000 |
+| Carlos Gonzlez          |   19.5000 |
+| Carlos Gonzlez          |   55.0000 |
+| Carlos Gonzlez          |   13.0000 |
+| Carlos Gonzlez          |   18.0000 |
+| Carlos Gonzlez          |   32.0000 |
+| Carlos Gonzlez          |   12.0000 |
+| Carlos Gonzlez          |    7.0000 |
+| Carlos Gonzlez          |   25.8900 |
+| Carlos Gonzlez          |    7.4500 |
+| Carlos Gonzlez          |   30.0000 |
+| Carlos Gonzlez          |    6.0000 |
+| Felipe Izquierdo        |    8.0000 |
+| Felipe Izquierdo        |   15.2000 |
+| Felipe Izquierdo        |    8.0000 |
+| Felipe Izquierdo        |   19.2000 |
+| Felipe Izquierdo        |   12.0000 |
+| Felipe Izquierdo        |    9.5000 |
+| Felipe Izquierdo        |   21.0500 |
+| Felipe Izquierdo        |   34.8000 |
+| Felipe Izquierdo        |    9.2000 |
+| Felipe Izquierdo        |   18.0000 |
+| Felipe Izquierdo        |   13.2500 |
+| Felipe Izquierdo        |   15.0000 |
+| Felipe Izquierdo        |   18.0000 |
+| Felipe Izquierdo        |   10.0000 |
+| Felipe Izquierdo        |   16.2500 |
+| Felipe Izquierdo        |    9.2000 |
+| Felipe Izquierdo        |    9.0000 |
+| Felipe Izquierdo        |   18.4000 |
+| Felipe Izquierdo        |   18.0000 |
+| Felipe Izquierdo        |   62.5000 |
+| Felipe Izquierdo        |   19.0000 |
+| Felipe Izquierdo        |   14.0000 |
+| Felipe Izquierdo        |   18.0000 |
+| Felipe Izquierdo        |   17.4500 |
+| Felipe Izquierdo        |   14.0000 |
+| Felipe Izquierdo        |   18.4000 |
+| Felipe Izquierdo        |   17.4500 |
+| Felipe Izquierdo        |   12.5000 |
+| Felipe Izquierdo        |    9.5000 |
+| Felipe Izquierdo        |   34.0000 |
+| Felipe Izquierdo        |    9.6500 |
+| Felipe Izquierdo        |   45.6000 |
+| Felipe Izquierdo        |   18.0000 |
+| Felipe Izquierdo        |   20.0000 |
+| Felipe Izquierdo        |   19.5000 |
+| Fran Wilson             |   39.4000 |
+| Fran Wilson             |   10.0000 |
+| Fran Wilson             |   14.4000 |
+| Fran Wilson             |   45.6000 |
+| Fran Wilson             |   14.0000 |
+| Fran Wilson             |   12.5000 |
+| Fran Wilson             |   53.0000 |
+| Fran Wilson             |   55.0000 |
+| Fran Wilson             |   18.0000 |
+| Fran Wilson             |   32.8000 |
+| Fran Wilson             |    4.5000 |
+| Fran Wilson             |   38.0000 |
+| Fran Wilson             |   62.5000 |
+| Fran Wilson             |   38.0000 |
+| Giovanni Rovelli        |    3.6000 |
+| Giovanni Rovelli        |   44.0000 |
+| Giovanni Rovelli        |   13.6000 |
+| Giovanni Rovelli        |   10.0000 |
+| Giovanni Rovelli        |   24.9000 |
+| Giovanni Rovelli        |   11.2000 |
+| Giovanni Rovelli        |   16.0000 |
+| Giovanni Rovelli        |    3.6000 |
+| Giovanni Rovelli        |   11.2000 |
+| Giovanni Rovelli        |   22.0000 |
+| Giovanni Rovelli        |   21.3500 |
+| Giovanni Rovelli        |   21.0000 |
+| Giovanni Rovelli        |   18.4000 |
+| Giovanni Rovelli        |   19.0000 |
+| Giovanni Rovelli        |   18.0000 |
+| Giovanni Rovelli        |   34.8000 |
+| Giovanni Rovelli        |   32.0000 |
+| Giovanni Rovelli        |    9.6500 |
+| Giovanni Rovelli        |   19.0000 |
+| Giovanni Rovelli        |   14.0000 |
+| Giovanni Rovelli        |   22.0000 |
+| Catherine Dewey         |   24.0000 |
+| Catherine Dewey         |   12.5000 |
+| Catherine Dewey         |   36.0000 |
+| Catherine Dewey         |   45.6000 |
+| Catherine Dewey         |   34.8000 |
+| Catherine Dewey         |   14.0000 |
+| Catherine Dewey         |   43.9000 |
+| Catherine Dewey         |   46.0000 |
+| Catherine Dewey         |   55.0000 |
+| Catherine Dewey         |    9.5000 |
+| Catherine Dewey         |   38.0000 |
+| Catherine Dewey         |   40.0000 |
+| Catherine Dewey         |   10.0000 |
+| Catherine Dewey         |   18.4000 |
+| Catherine Dewey         |   19.4500 |
+| Catherine Dewey         |   31.2300 |
+| Catherine Dewey         |   18.0000 |
+| Jean Fresnire           |   50.0000 |
+| Jean Fresnire           |   11.2000 |
+| Jean Fresnire           |    7.6000 |
+| Jean Fresnire           |   17.6000 |
+| Jean Fresnire           |   31.2000 |
+| Jean Fresnire           |   39.4000 |
+| Jean Fresnire           |   10.0000 |
+| Jean Fresnire           |   14.4000 |
+| Jean Fresnire           |  210.8000 |
+| Jean Fresnire           |   10.0000 |
+| Jean Fresnire           |   30.4000 |
+| Jean Fresnire           |   13.9000 |
+| Jean Fresnire           |   26.6000 |
+| Jean Fresnire           |    8.0000 |
+| Jean Fresnire           |   49.3000 |
+| Jean Fresnire           |    4.5000 |
+| Jean Fresnire           |   33.2500 |
+| Jean Fresnire           |   21.0000 |
+| Jean Fresnire           |   38.0000 |
+| Jean Fresnire           |   18.0000 |
+| Jean Fresnire           |   13.0000 |
+| Jean Fresnire           |   17.4500 |
+| Jean Fresnire           |   55.0000 |
+| Jean Fresnire           |   34.0000 |
+| Jean Fresnire           |   21.5000 |
+| Jean Fresnire           |   25.0000 |
+| Jean Fresnire           |   38.0000 |
+| Jean Fresnire           |   12.5000 |
+| Jean Fresnire           |   10.0000 |
+| Jean Fresnire           |   21.0000 |
+| Jean Fresnire           |   31.0000 |
+| Jean Fresnire           |   28.5000 |
+| Alexander Feuer         |   36.4000 |
+| Alexander Feuer         |   39.4000 |
+| Alexander Feuer         |   55.0000 |
+| Alexander Feuer         |   43.9000 |
+| Alexander Feuer         |   34.8000 |
+| Alexander Feuer         |   18.0000 |
+| Alexander Feuer         |    9.5000 |
+| Alexander Feuer         |   17.4500 |
+| Alexander Feuer         |   49.3000 |
+| Alexander Feuer         |    6.0000 |
+| Alexander Feuer         |   12.5000 |
+| Simon Crowther          |    7.0000 |
+| Simon Crowther          |   55.0000 |
+| Simon Crowther          |   15.0000 |
+| Simon Crowther          |   18.0000 |
+| Simon Crowther          |   36.0000 |
+| Simon Crowther          |   15.0000 |
+| Yvonne Moncada          |   18.6000 |
+| Yvonne Moncada          |    8.0000 |
+| Yvonne Moncada          |   55.0000 |
+| Yvonne Moncada          |    6.0000 |
+| Yvonne Moncada          |   21.3500 |
+| Yvonne Moncada          |   30.0000 |
+| Yvonne Moncada          |   34.8000 |
+| Yvonne Moncada          |   21.0000 |
+| Yvonne Moncada          |   81.0000 |
+| Yvonne Moncada          |   18.0000 |
+| Yvonne Moncada          |   13.0000 |
+| Rene Phillips           |   50.0000 |
+| Rene Phillips           |   99.0000 |
+| Rene Phillips           |   14.4000 |
+| Rene Phillips           |   31.2000 |
+| Rene Phillips           |   20.7000 |
+| Rene Phillips           |   35.1000 |
+| Rene Phillips           |    7.0000 |
+| Rene Phillips           |   13.2500 |
+| Rene Phillips           |   17.4500 |
+| Rene Phillips           |   12.5000 |
+| Rene Phillips           |   14.0000 |
+| Rene Phillips           |   17.4500 |
+| Rene Phillips           |   46.0000 |
+| Rene Phillips           |   55.0000 |
+| Rene Phillips           |   38.0000 |
+| Rene Phillips           |   18.0000 |
+| Rene Phillips           |   17.4500 |
+| Rene Phillips           |   12.5000 |
+| Rene Phillips           |   38.0000 |
+| Rene Phillips           |   21.0500 |
+| Rene Phillips           |   53.0000 |
+| Rene Phillips           |   10.0000 |
+| Rene Phillips           |   19.4500 |
+| Rene Phillips           |   28.5000 |
+| Henriette Pfalzheim     |    7.7000 |
+| Henriette Pfalzheim     |   15.6000 |
+| Henriette Pfalzheim     |   39.4000 |
+| Henriette Pfalzheim     |   12.0000 |
+| Henriette Pfalzheim     |   16.8000 |
+| Henriette Pfalzheim     |   28.8000 |
+| Henriette Pfalzheim     |   17.2000 |
+| Henriette Pfalzheim     |    6.0000 |
+| Henriette Pfalzheim     |   18.0000 |
+| Henriette Pfalzheim     |   17.4500 |
+| Henriette Pfalzheim     |    9.0000 |
+| Henriette Pfalzheim     |   49.3000 |
+| Henriette Pfalzheim     |   13.0000 |
+| Henriette Pfalzheim     |   23.2500 |
+| Henriette Pfalzheim     |    9.6500 |
+| Henriette Pfalzheim     |   21.0500 |
+| Henriette Pfalzheim     |   18.4000 |
+| Henriette Pfalzheim     |    9.5000 |
+| Henriette Pfalzheim     |   34.0000 |
+| Henriette Pfalzheim     |   19.0000 |
+| Henriette Pfalzheim     |   30.0000 |
+| Henriette Pfalzheim     |   12.5000 |
+| Henriette Pfalzheim     |   30.0000 |
+| Henriette Pfalzheim     |   12.5000 |
+| Henriette Pfalzheim     |   32.8000 |
+| Henriette Pfalzheim     |    9.6500 |
+| Henriette Pfalzheim     |   53.0000 |
+| Henriette Pfalzheim     |   13.0000 |
+| Henriette Pfalzheim     |   31.0000 |
+| Guillermo Fernndez      |    5.6000 |
+| Guillermo Fernndez      |   14.4000 |
+| Guillermo Fernndez      |   99.0000 |
+| Guillermo Fernndez      |   18.6000 |
+| Guillermo Fernndez      |   36.4000 |
+| Guillermo Fernndez      |   14.7000 |
+| Guillermo Fernndez      |    6.2000 |
+| Guillermo Fernndez      |    9.5000 |
+| Guillermo Fernndez      |   32.8000 |
+| Guillermo Fernndez      |   14.0000 |
+| Guillermo Fernndez      |   53.0000 |
+| Guillermo Fernndez      |   34.0000 |
+| Guillermo Fernndez      |   21.0000 |
+| Guillermo Fernndez      |    4.5000 |
+| Georg Pipps             |   16.8000 |
+| Georg Pipps             |  210.8000 |
+| Georg Pipps             |   28.8000 |
+| Georg Pipps             |   18.6000 |
+| Georg Pipps             |   16.8000 |
+| Georg Pipps             |   13.9000 |
+| Georg Pipps             |   39.0000 |
+| Georg Pipps             |   46.0000 |
+| Georg Pipps             |   28.5000 |
+| Georg Pipps             |   18.0000 |
+| Georg Pipps             |    4.5000 |
+| Georg Pipps             |   19.5000 |
+| Georg Pipps             |   21.0500 |
+| Georg Pipps             |   39.0000 |
+| Georg Pipps             |   31.2300 |
+| Georg Pipps             |   12.5000 |
+| Georg Pipps             |    9.6500 |
+| Georg Pipps             |   43.9000 |
+| Georg Pipps             |   36.0000 |
+| Georg Pipps             |   21.0000 |
+| Georg Pipps             |   62.5000 |
+| Georg Pipps             |   32.0000 |
+| Georg Pipps             |   33.2500 |
+| Isabel de Castro        |   17.6000 |
+| Isabel de Castro        |    8.0000 |
+| Isabel de Castro        |   42.4000 |
+| Isabel de Castro        |   30.4000 |
+| Isabel de Castro        |   14.4000 |
+| Isabel de Castro        |    8.0000 |
+| Isabel de Castro        |   14.4000 |
+| Isabel de Castro        |   40.0000 |
+| Isabel de Castro        |  123.7900 |
+| Isabel de Castro        |   14.0000 |
+| Bernardo Batista        |    8.0000 |
+| Bernardo Batista        |   14.4000 |
+| Bernardo Batista        |    4.8000 |
+| Bernardo Batista        |   15.5000 |
+| Bernardo Batista        |   42.4000 |
+| Bernardo Batista        |    7.7000 |
+| Bernardo Batista        |   35.1000 |
+| Bernardo Batista        |   16.8000 |
+| Bernardo Batista        |    7.3000 |
+| Bernardo Batista        |   24.9000 |
+| Bernardo Batista        |   26.2000 |
+| Bernardo Batista        |   10.4000 |
+| Bernardo Batista        |   31.2300 |
+| Bernardo Batista        |   18.0000 |
+| Bernardo Batista        |   13.0000 |
+| Bernardo Batista        |    9.2000 |
+| Bernardo Batista        |   18.0000 |
+| Bernardo Batista        |   18.0000 |
+| Bernardo Batista        |   21.5000 |
+| Bernardo Batista        |   23.2500 |
+| Bernardo Batista        |    7.4500 |
+| Bernardo Batista        |   25.0000 |
+| Bernardo Batista        |   21.0000 |
+| Bernardo Batista        |    9.6500 |
+| Lcia Carvalho           |   64.8000 |
+| Lcia Carvalho           |  210.8000 |
+| Lcia Carvalho           |   27.2000 |
+| Lcia Carvalho           |   27.8000 |
+| Lcia Carvalho           |   14.4000 |
+| Lcia Carvalho           |    8.0000 |
+| Lcia Carvalho           |   36.4000 |
+| Lcia Carvalho           |   15.2000 |
+| Lcia Carvalho           |   14.7000 |
+| Lcia Carvalho           |    7.3000 |
+| Lcia Carvalho           |   24.9000 |
+| Lcia Carvalho           |    5.9000 |
+| Lcia Carvalho           |   21.0000 |
+| Lcia Carvalho           |   16.2500 |
+| Lcia Carvalho           |   38.0000 |
+| Lcia Carvalho           |   12.5000 |
+| Lcia Carvalho           |   18.4000 |
+| Lcia Carvalho           |   15.0000 |
+| Lcia Carvalho           |   22.0000 |
+| Lcia Carvalho           |    4.5000 |
+| Lcia Carvalho           |   12.7500 |
+| Lcia Carvalho           |   25.8900 |
+| Lcia Carvalho           |   18.4000 |
+| Lcia Carvalho           |   24.0000 |
+| Lcia Carvalho           |   34.0000 |
+| Lcia Carvalho           |   40.0000 |
+| Lcia Carvalho           |   25.8900 |
+| Lcia Carvalho           |    7.7500 |
+| Lcia Carvalho           |   31.2300 |
+| Lcia Carvalho           |   18.0000 |
+| Lcia Carvalho           |   20.0000 |
+| Lcia Carvalho           |   22.0000 |
+| Lcia Carvalho           |    2.5000 |
+| Lcia Carvalho           |   13.2500 |
+| Lcia Carvalho           |   21.5000 |
+| Lcia Carvalho           |    7.0000 |
+| Lcia Carvalho           |   18.0000 |
+| Lcia Carvalho           |   45.6000 |
+| Lcia Carvalho           |   46.0000 |
+| Lcia Carvalho           |   13.0000 |
+| Horst Kloss             |   24.8000 |
+| Horst Kloss             |   10.0000 |
+| Horst Kloss             |    2.0000 |
+| Horst Kloss             |   14.7000 |
+| Horst Kloss             |   14.4000 |
+| Horst Kloss             |   14.4000 |
+| Horst Kloss             |   14.7000 |
+| Horst Kloss             |   26.2000 |
+| Horst Kloss             |   14.4000 |
+| Horst Kloss             |   39.4000 |
+| Horst Kloss             |   15.2000 |
+| Horst Kloss             |   32.0000 |
+| Horst Kloss             |    7.3000 |
+| Horst Kloss             |   11.2000 |
+| Horst Kloss             |   14.4000 |
+| Horst Kloss             |   27.2000 |
+| Horst Kloss             |   15.2000 |
+| Horst Kloss             |    7.6000 |
+| Horst Kloss             |   22.8000 |
+| Horst Kloss             |    8.0000 |
+| Horst Kloss             |   19.2000 |
+| Horst Kloss             |   26.6000 |
+| Horst Kloss             |   16.8000 |
+| Horst Kloss             |   10.4000 |
+| Horst Kloss             |   97.0000 |
+| Horst Kloss             |   17.4500 |
+| Horst Kloss             |   43.9000 |
+| Horst Kloss             |    2.5000 |
+| Horst Kloss             |   34.0000 |
+| Horst Kloss             |   22.0000 |
+| Horst Kloss             |   19.0000 |
+| Horst Kloss             |   10.0000 |
+| Horst Kloss             |   31.2300 |
+| Horst Kloss             |  263.5000 |
+| Horst Kloss             |   12.5000 |
+| Horst Kloss             |   12.5000 |
+| Horst Kloss             |    9.5000 |
+| Horst Kloss             |   53.0000 |
+| Horst Kloss             |   62.5000 |
+| Horst Kloss             |   14.0000 |
+| Horst Kloss             |   10.0000 |
+| Horst Kloss             |   18.4000 |
+| Horst Kloss             |   34.0000 |
+| Horst Kloss             |   13.0000 |
+| Horst Kloss             |   18.0000 |
+| Horst Kloss             |  123.7900 |
+| Horst Kloss             |   46.0000 |
+| Horst Kloss             |   19.4500 |
+| Horst Kloss             |   49.3000 |
+| Horst Kloss             |   30.0000 |
+| Horst Kloss             |   55.0000 |
+| Horst Kloss             |   15.0000 |
+| Horst Kloss             |   19.4500 |
+| Horst Kloss             |   62.5000 |
+| Horst Kloss             |   19.4500 |
+| Horst Kloss             |   55.0000 |
+| Horst Kloss             |   34.8000 |
+| Horst Kloss             |   21.0500 |
+| Horst Kloss             |    9.2000 |
+| Horst Kloss             |    7.7500 |
+| Horst Kloss             |    9.0000 |
+| Horst Kloss             |   18.0000 |
+| Horst Kloss             |   14.0000 |
+| Horst Kloss             |   13.2500 |
+| Horst Kloss             |   33.2500 |
+| Horst Kloss             |  263.5000 |
+| Horst Kloss             |   18.0000 |
+| Horst Kloss             |   81.0000 |
+| Horst Kloss             |    6.0000 |
+| Horst Kloss             |   46.0000 |
+| Horst Kloss             |   34.0000 |
+| Horst Kloss             |   21.5000 |
+| Horst Kloss             |   30.0000 |
+| Horst Kloss             |    6.0000 |
+| Horst Kloss             |   32.8000 |
+| Horst Kloss             |   36.0000 |
+| Horst Kloss             |   18.0000 |
+| Horst Kloss             |   19.0000 |
+| Horst Kloss             |   15.0000 |
+| Horst Kloss             |   18.0000 |
+| Horst Kloss             |   14.0000 |
+| Horst Kloss             |   19.0000 |
+| Horst Kloss             |   81.0000 |
+| Horst Kloss             |   31.2300 |
+| Horst Kloss             |   53.0000 |
+| Horst Kloss             |   34.8000 |
+| Sergio Gutirrez         |   24.9000 |
+| Sergio Gutirrez         |   14.7000 |
+| Sergio Gutirrez         |   10.0000 |
+| Sergio Gutirrez         |   53.0000 |
+| Sergio Gutirrez         |   28.5000 |
+| Sergio Gutirrez         |   81.0000 |
+| Sergio Gutirrez         |  263.5000 |
+| Sergio Gutirrez         |   17.4500 |
+| Sergio Gutirrez         |   32.0000 |
+| Sergio Gutirrez         |   19.5000 |
+| Sergio Gutirrez         |   12.0000 |
+| Sergio Gutirrez         |   20.0000 |
+| Paula Wilson            |   64.8000 |
+| Paula Wilson            |   10.0000 |
+| Paula Wilson            |   27.8000 |
+| Paula Wilson            |   14.4000 |
+| Paula Wilson            |   31.2000 |
+| Paula Wilson            |   36.8000 |
+| Paula Wilson            |   27.2000 |
+| Paula Wilson            |    6.2000 |
+| Paula Wilson            |   25.6000 |
+| Paula Wilson            |   10.6000 |
+| Paula Wilson            |   39.4000 |
+| Paula Wilson            |    7.7000 |
+| Paula Wilson            |   39.4000 |
+| Paula Wilson            |   31.2000 |
+| Paula Wilson            |   30.4000 |
+| Paula Wilson            |   20.7000 |
+| Paula Wilson            |   30.4000 |
+| Paula Wilson            |   16.8000 |
+| Paula Wilson            |   17.2000 |
+| Paula Wilson            |  210.8000 |
+| Paula Wilson            |   26.2000 |
+| Paula Wilson            |   44.0000 |
+| Paula Wilson            |   26.6000 |
+| Paula Wilson            |   39.0000 |
+| Paula Wilson            |   12.5000 |
+| Paula Wilson            |   24.0000 |
+| Paula Wilson            |   12.5000 |
+| Paula Wilson            |   18.0000 |
+| Paula Wilson            |   43.9000 |
+| Paula Wilson            |   21.5000 |
+| Paula Wilson            |   14.0000 |
+| Paula Wilson            |    7.7500 |
+| Paula Wilson            |   38.0000 |
+| Paula Wilson            |   19.0000 |
+| Paula Wilson            |   39.0000 |
+| Paula Wilson            |   49.3000 |
+| Paula Wilson            |   21.0000 |
+| Paula Wilson            |  263.5000 |
+| Paula Wilson            |   30.0000 |
+| Paula Wilson            |   49.3000 |
+| Paula Wilson            |   22.0000 |
+| Paula Wilson            |    4.5000 |
+| Paula Wilson            |   13.0000 |
+| Paula Wilson            |   19.0000 |
+| Paula Wilson            |   10.0000 |
+| Paula Wilson            |   22.0000 |
+| Paula Wilson            |   25.0000 |
+| Paula Wilson            |   30.0000 |
+| Paula Wilson            |   40.0000 |
+| Paula Wilson            |   31.0000 |
+| Paula Wilson            |   38.0000 |
+| Paula Wilson            |    6.0000 |
+| Paula Wilson            |   23.2500 |
+| Paula Wilson            |   17.4500 |
+| Paula Wilson            |   81.0000 |
+| Paula Wilson            |    9.0000 |
+| Paula Wilson            |   32.0000 |
+| Paula Wilson            |   18.0000 |
+| Paula Wilson            |    9.6500 |
+| Paula Wilson            |   12.0000 |
+| Paula Wilson            |    7.0000 |
+| Paula Wilson            |   24.0000 |
+| Paula Wilson            |   34.0000 |
+| Paula Wilson            |   33.2500 |
+| Paula Wilson            |   17.0000 |
+| Paula Wilson            |   15.0000 |
+| Paula Wilson            |    7.7500 |
+| Paula Wilson            |   13.0000 |
+| Maurizio Moroni         |    5.9000 |
+| Maurizio Moroni         |   10.0000 |
+| Maurizio Moroni         |    9.6000 |
+| Maurizio Moroni         |   16.8000 |
+| Maurizio Moroni         |   36.4000 |
+| Maurizio Moroni         |    2.5000 |
+| Maurizio Moroni         |   49.3000 |
+| Maurizio Moroni         |    7.0000 |
+| Maurizio Moroni         |    9.6500 |
+| Maurizio Moroni         |   39.0000 |
+| Maurizio Moroni         |   38.0000 |
+| Maurizio Moroni         |   55.0000 |
+| Maurizio Moroni         |   12.5000 |
+| Maurizio Moroni         |   34.8000 |
+| Maurizio Moroni         |   13.0000 |
+| Maurizio Moroni         |   30.0000 |
+| Maurizio Moroni         |    7.0000 |
+| Maurizio Moroni         |   20.0000 |
+| Maurizio Moroni         |   30.0000 |
+| Maurizio Moroni         |    4.5000 |
+| Maurizio Moroni         |   32.8000 |
+| Maurizio Moroni         |   15.0000 |
+| Janete Limeira          |   13.9000 |
+| Janete Limeira          |   11.2000 |
+| Janete Limeira          |    9.6000 |
+| Janete Limeira          |    7.3000 |
+| Janete Limeira          |   12.0000 |
+| Janete Limeira          |    7.3000 |
+| Janete Limeira          |   16.8000 |
+| Janete Limeira          |   17.2000 |
+| Janete Limeira          |   16.0000 |
+| Janete Limeira          |   27.2000 |
+| Janete Limeira          |   19.0000 |
+| Janete Limeira          |    7.0000 |
+| Janete Limeira          |   19.0000 |
+| Janete Limeira          |   12.5000 |
+| Janete Limeira          |   21.0000 |
+| Janete Limeira          |    4.5000 |
+| Janete Limeira          |   19.0000 |
+| Janete Limeira          |   12.0000 |
+| Janete Limeira          |   19.0000 |
+| Janete Limeira          |   14.0000 |
+| Janete Limeira          |   19.5000 |
+| Janete Limeira          |   55.0000 |
+| Janete Limeira          |   17.4500 |
+| Janete Limeira          |   62.5000 |
+| Janete Limeira          |    6.0000 |
+| Janete Limeira          |   39.0000 |
+| Janete Limeira          |   34.0000 |
+| Michael Holz            |   15.2000 |
+| Michael Holz            |   13.9000 |
+| Michael Holz            |   15.2000 |
+| Michael Holz            |   44.0000 |
+| Michael Holz            |   27.2000 |
+| Michael Holz            |   28.8000 |
+| Michael Holz            |   12.5000 |
+| Michael Holz            |   53.0000 |
+| Michael Holz            |   13.2500 |
+| Michael Holz            |   34.8000 |
+| Michael Holz            |   15.0000 |
+| Michael Holz            |  123.7900 |
+| Michael Holz            |   21.0500 |
+| Michael Holz            |   31.2300 |
+| Michael Holz            |   25.8900 |
+| Michael Holz            |   16.2500 |
+| Michael Holz            |   15.0000 |
+| Michael Holz            |   31.2300 |
+| Michael Holz            |    7.0000 |
+| Michael Holz            |   15.0000 |
+| Michael Holz            |    6.0000 |
+| Michael Holz            |   19.5000 |
+| Michael Holz            |    2.5000 |
+| Michael Holz            |    9.6500 |
+| Michael Holz            |    7.7500 |
+| Michael Holz            |   32.8000 |
+| Michael Holz            |   36.0000 |
+| Michael Holz            |   19.0000 |
+| Michael Holz            |   12.0000 |
+| Michael Holz            |   18.0000 |
+| Alejandra Camino        |    7.3000 |
+| Alejandra Camino        |    3.6000 |
+| Alejandra Camino        |   14.4000 |
+| Alejandra Camino        |   20.7000 |
+| Alejandra Camino        |   15.6000 |
+| Alejandra Camino        |   20.7000 |
+| Alejandra Camino        |   26.2000 |
+| Alejandra Camino        |    5.9000 |
+| Alejandra Camino        |   25.8900 |
+| Alejandra Camino        |   34.0000 |
+| Alejandra Camino        |    9.0000 |
+| Alejandra Camino        |   14.0000 |
+| Alejandra Camino        |    9.5000 |
+| Alejandra Camino        |   12.5000 |
+| Jonas Bergulfsen        |    3.6000 |
+| Jonas Bergulfsen        |   36.4000 |
+| Jonas Bergulfsen        |   44.0000 |
+| Jonas Bergulfsen        |   17.2000 |
+| Jonas Bergulfsen        |    4.5000 |
+| Jonas Bergulfsen        |   32.8000 |
+| Jonas Bergulfsen        |   62.5000 |
+| Jonas Bergulfsen        |    9.2000 |
+| Jonas Bergulfsen        |   18.0000 |
+| Jonas Bergulfsen        |  263.5000 |
+| Jonas Bergulfsen        |   46.0000 |
+| Jonas Bergulfsen        |   30.0000 |
+| Jonas Bergulfsen        |   17.4500 |
+| Jonas Bergulfsen        |    9.6500 |
+| Jonas Bergulfsen        |   25.8900 |
+| Jonas Bergulfsen        |   13.0000 |
+| Jose Pavarotti          |   13.9000 |
+| Jose Pavarotti          |   14.4000 |
+| Jose Pavarotti          |    9.6000 |
+| Jose Pavarotti          |   44.0000 |
+| Jose Pavarotti          |   35.1000 |
+| Jose Pavarotti          |   15.2000 |
+| Jose Pavarotti          |   18.6000 |
+| Jose Pavarotti          |   11.2000 |
+| Jose Pavarotti          |   24.9000 |
+| Jose Pavarotti          |   10.0000 |
+| Jose Pavarotti          |   14.4000 |
+| Jose Pavarotti          |   19.2000 |
+| Jose Pavarotti          |   15.2000 |
+| Jose Pavarotti          |   13.9000 |
+| Jose Pavarotti          |   99.0000 |
+| Jose Pavarotti          |   22.8000 |
+| Jose Pavarotti          |   36.4000 |
+| Jose Pavarotti          |   15.5000 |
+| Jose Pavarotti          |  123.7900 |
+| Jose Pavarotti          |    7.7500 |
+| Jose Pavarotti          |   23.2500 |
+| Jose Pavarotti          |    9.2000 |
+| Jose Pavarotti          |    4.5000 |
+| Jose Pavarotti          |   53.0000 |
+| Jose Pavarotti          |   38.0000 |
+| Jose Pavarotti          |   21.0000 |
+| Jose Pavarotti          |   20.0000 |
+| Jose Pavarotti          |   30.0000 |
+| Jose Pavarotti          |   39.0000 |
+| Jose Pavarotti          |    2.5000 |
+| Jose Pavarotti          |   18.4000 |
+| Jose Pavarotti          |   34.8000 |
+| Jose Pavarotti          |   31.0000 |
+| Jose Pavarotti          |   19.0000 |
+| Jose Pavarotti          |   20.0000 |
+| Jose Pavarotti          |   34.0000 |
+| Jose Pavarotti          |   18.0000 |
+| Jose Pavarotti          |   49.3000 |
+| Jose Pavarotti          |   15.0000 |
+| Jose Pavarotti          |   15.5000 |
+| Jose Pavarotti          |    9.6500 |
+| Jose Pavarotti          |   12.0000 |
+| Jose Pavarotti          |    9.5000 |
+| Jose Pavarotti          |   38.0000 |
+| Jose Pavarotti          |   34.0000 |
+| Jose Pavarotti          |   38.0000 |
+| Jose Pavarotti          |    2.5000 |
+| Jose Pavarotti          |    9.6500 |
+| Jose Pavarotti          |    7.4500 |
+| Jose Pavarotti          |   18.0000 |
+| Jose Pavarotti          |   14.0000 |
+| Jose Pavarotti          |   12.5000 |
+| Jose Pavarotti          |   21.5000 |
+| Jose Pavarotti          |    9.2000 |
+| Jose Pavarotti          |    9.6500 |
+| Jose Pavarotti          |   32.8000 |
+| Jose Pavarotti          |   31.0000 |
+| Jose Pavarotti          |   31.2300 |
+| Jose Pavarotti          |    9.5000 |
+| Jose Pavarotti          |   12.0000 |
+| Jose Pavarotti          |   19.0000 |
+| Jose Pavarotti          |   39.0000 |
+| Jose Pavarotti          |    9.5000 |
+| Jose Pavarotti          |   38.0000 |
+| Jose Pavarotti          |   13.2500 |
+| Jose Pavarotti          |   19.0000 |
+| Jose Pavarotti          |   12.5000 |
+| Jose Pavarotti          |   12.5000 |
+| Jose Pavarotti          |    7.7500 |
+| Jose Pavarotti          |    9.0000 |
+| Jose Pavarotti          |   18.4000 |
+| Jose Pavarotti          |   38.0000 |
+| Jose Pavarotti          |   14.0000 |
+| Jose Pavarotti          |   55.0000 |
+| Jose Pavarotti          |   49.3000 |
+| Jose Pavarotti          |   33.2500 |
+| Jose Pavarotti          |    2.5000 |
+| Jose Pavarotti          |   18.0000 |
+| Jose Pavarotti          |    9.2000 |
+| Jose Pavarotti          |   26.0000 |
+| Jose Pavarotti          |    9.5000 |
+| Jose Pavarotti          |   34.0000 |
+| Jose Pavarotti          |   21.5000 |
+| Jose Pavarotti          |   14.0000 |
+| Jose Pavarotti          |   20.0000 |
+| Jose Pavarotti          |    7.4500 |
+| Jose Pavarotti          |    6.0000 |
+| Jose Pavarotti          |   36.0000 |
+| Jose Pavarotti          |    7.7500 |
+| Jose Pavarotti          |   12.5000 |
+| Jose Pavarotti          |   49.3000 |
+| Jose Pavarotti          |   12.5000 |
+| Jose Pavarotti          |   34.8000 |
+| Jose Pavarotti          |    6.0000 |
+| Jose Pavarotti          |   19.5000 |
+| Jose Pavarotti          |   17.4500 |
+| Jose Pavarotti          |    4.5000 |
+| Jose Pavarotti          |   19.0000 |
+| Jose Pavarotti          |    6.0000 |
+| Jose Pavarotti          |   18.0000 |
+| Jose Pavarotti          |   14.0000 |
+| Jose Pavarotti          |   24.0000 |
+| Jose Pavarotti          |   19.0000 |
+| Jose Pavarotti          |   21.3500 |
+| Jose Pavarotti          |  123.7900 |
+| Jose Pavarotti          |   55.0000 |
+| Jose Pavarotti          |   18.0000 |
+| Jose Pavarotti          |    6.0000 |
+| Jose Pavarotti          |    4.5000 |
+| Jose Pavarotti          |   33.2500 |
+| Jose Pavarotti          |   21.5000 |
+| Jose Pavarotti          |   39.0000 |
+| Jose Pavarotti          |    9.6500 |
+| Jose Pavarotti          |   32.8000 |
+| Jose Pavarotti          |   24.0000 |
+| Jose Pavarotti          |   12.5000 |
+| Hari Kumar              |   13.9000 |
+| Hari Kumar              |   10.0000 |
+| Hari Kumar              |   27.2000 |
+| Hari Kumar              |   36.4000 |
+| Hari Kumar              |   14.4000 |
+| Hari Kumar              |    7.6000 |
+| Hari Kumar              |    5.6000 |
+| Hari Kumar              |   26.2000 |
+| Hari Kumar              |    3.6000 |
+| Hari Kumar              |   42.4000 |
+| Hari Kumar              |   39.0000 |
+| Hari Kumar              |   81.0000 |
+| Hari Kumar              |   26.0000 |
+| Hari Kumar              |    9.6500 |
+| Hari Kumar              |   32.0000 |
+| Hari Kumar              |   19.0000 |
+| Hari Kumar              |   21.0000 |
+| Hari Kumar              |   53.0000 |
+| Hari Kumar              |    7.4500 |
+| Hari Kumar              |   31.0000 |
+| Hari Kumar              |   45.6000 |
+| Hari Kumar              |   20.0000 |
+| Hari Kumar              |   18.0000 |
+| Hari Kumar              |   21.0000 |
+| Hari Kumar              |    9.0000 |
+| Hari Kumar              |   12.5000 |
+| Jytte Petersen          |    2.0000 |
+| Jytte Petersen          |   44.0000 |
+| Jytte Petersen          |  210.8000 |
+| Jytte Petersen          |    9.6000 |
+| Jytte Petersen          |   10.0000 |
+| Jytte Petersen          |   10.4000 |
+| Jytte Petersen          |   34.8000 |
+| Jytte Petersen          |   10.0000 |
+| Jytte Petersen          |   28.5000 |
+| Jytte Petersen          |   19.0000 |
+| Jytte Petersen          |   25.8900 |
+| Jytte Petersen          |   53.0000 |
+| Jytte Petersen          |   24.0000 |
+| Jytte Petersen          |   49.3000 |
+| Jytte Petersen          |   17.4500 |
+| Dominique Perrier       |   17.4500 |
+| Dominique Perrier       |    7.7500 |
+| Dominique Perrier       |   62.5000 |
+| Dominique Perrier       |  263.5000 |
+| Dominique Perrier       |   36.0000 |
+| Dominique Perrier       |   21.0000 |
+| Art Braunschweiger      |    2.0000 |
+| Art Braunschweiger      |    7.3000 |
+| Art Braunschweiger      |   20.7000 |
+| Art Braunschweiger      |  210.8000 |
+| Art Braunschweiger      |   30.4000 |
+| Art Braunschweiger      |    5.9000 |
+| Art Braunschweiger      |   99.0000 |
+| Art Braunschweiger      |   30.4000 |
+| Art Braunschweiger      |   24.0000 |
+| Art Braunschweiger      |   27.2000 |
+| Art Braunschweiger      |   10.0000 |
+| Art Braunschweiger      |   24.9000 |
+| Art Braunschweiger      |    5.9000 |
+| Art Braunschweiger      |   62.5000 |
+| Art Braunschweiger      |   19.0000 |
+| Art Braunschweiger      |   12.5000 |
+| Art Braunschweiger      |   36.0000 |
+| Art Braunschweiger      |   18.0000 |
+| Art Braunschweiger      |   53.0000 |
+| Art Braunschweiger      |   43.9000 |
+| Pascale Cartrain        |   64.8000 |
+| Pascale Cartrain        |    2.0000 |
+| Pascale Cartrain        |   27.2000 |
+| Pascale Cartrain        |   31.2000 |
+| Pascale Cartrain        |   36.4000 |
+| Pascale Cartrain        |   36.8000 |
+| Pascale Cartrain        |   24.9000 |
+| Pascale Cartrain        |   36.4000 |
+| Pascale Cartrain        |   36.8000 |
+| Pascale Cartrain        |   30.4000 |
+| Pascale Cartrain        |   17.2000 |
+| Pascale Cartrain        |    7.3000 |
+| Pascale Cartrain        |   11.2000 |
+| Pascale Cartrain        |   10.0000 |
+| Pascale Cartrain        |   13.6000 |
+| Pascale Cartrain        |   14.4000 |
+| Pascale Cartrain        |   14.0000 |
+| Pascale Cartrain        |   31.0000 |
+| Pascale Cartrain        |   38.0000 |
+| Pascale Cartrain        |   55.0000 |
+| Pascale Cartrain        |   13.0000 |
+| Pascale Cartrain        |   22.0000 |
+| Pascale Cartrain        |   15.0000 |
+| Pascale Cartrain        |   10.0000 |
+| Pascale Cartrain        |   19.0000 |
+| Pascale Cartrain        |    4.5000 |
+| Pascale Cartrain        |   15.0000 |
+| Pascale Cartrain        |   13.0000 |
+| Pascale Cartrain        |   10.0000 |
+| Pascale Cartrain        |   43.9000 |
+| Pascale Cartrain        |   24.0000 |
+| Pascale Cartrain        |   13.2500 |
+| Pascale Cartrain        |   18.0000 |
+| Pascale Cartrain        |   18.0000 |
+| Pascale Cartrain        |   14.0000 |
+| Pascale Cartrain        |    7.4500 |
+| Pascale Cartrain        |   18.4000 |
+| Pascale Cartrain        |    7.0000 |
+| Pascale Cartrain        |   21.5000 |
+| Liz Nixon               |   13.9000 |
+| Liz Nixon               |   39.4000 |
+| Liz Nixon               |   21.3500 |
+| Liz Nixon               |   19.0000 |
+| Liz Nixon               |   14.0000 |
+| Liz Nixon               |  263.5000 |
+| Liz Nixon               |   34.8000 |
+| Liu Wong                |   45.6000 |
+| Liu Wong                |  123.7900 |
+| Liu Wong                |   19.4500 |
+| Liu Wong                |   31.0000 |
+| Liu Wong                |   14.0000 |
+| Liu Wong                |   18.0000 |
+| Liu Wong                |   18.4000 |
+| Liu Wong                |    7.0000 |
+| Karin Josephs           |   18.6000 |
+| Karin Josephs           |   42.4000 |
+| Karin Josephs           |    7.3000 |
+| Karin Josephs           |   11.2000 |
+| Karin Josephs           |   15.6000 |
+| Karin Josephs           |    7.3000 |
+| Karin Josephs           |    3.6000 |
+| Karin Josephs           |   10.0000 |
+| Karin Josephs           |    5.6000 |
+| Karin Josephs           |   14.0000 |
+| Karin Josephs           |    9.6500 |
+| Karin Josephs           |   38.0000 |
+| Karin Josephs           |    9.2000 |
+| Karin Josephs           |   20.0000 |
+| Miguel Angel Paolino    |   24.8000 |
+| Miguel Angel Paolino    |    4.8000 |
+| Miguel Angel Paolino    |   50.0000 |
+| Miguel Angel Paolino    |    3.6000 |
+| Miguel Angel Paolino    |   35.1000 |
+| Miguel Angel Paolino    |    6.2000 |
+| Miguel Angel Paolino    |   16.0000 |
+| Miguel Angel Paolino    |   44.0000 |
+| Miguel Angel Paolino    |   17.2000 |
+| Miguel Angel Paolino    |   31.2000 |
+| Miguel Angel Paolino    |   36.4000 |
+| Miguel Angel Paolino    |   14.4000 |
+| Miguel Angel Paolino    |    4.5000 |
+| Miguel Angel Paolino    |  263.5000 |
+| Miguel Angel Paolino    |   19.4500 |
+| Miguel Angel Paolino    |   18.0000 |
+| Miguel Angel Paolino    |   12.5000 |
+| Miguel Angel Paolino    |   19.4500 |
+| Miguel Angel Paolino    |   31.0000 |
+| Miguel Angel Paolino    |    9.2000 |
+| Miguel Angel Paolino    |   19.4500 |
+| Miguel Angel Paolino    |   21.0000 |
+| Miguel Angel Paolino    |   46.0000 |
+| Miguel Angel Paolino    |   12.5000 |
+| Miguel Angel Paolino    |   15.0000 |
+| Miguel Angel Paolino    |   39.0000 |
+| Miguel Angel Paolino    |    2.5000 |
+| Miguel Angel Paolino    |    7.4500 |
+| Miguel Angel Paolino    |   18.0000 |
+| Anabela Domingues       |   64.8000 |
+| Anabela Domingues       |   10.0000 |
+| Anabela Domingues       |   22.0000 |
+| Anabela Domingues       |   24.0000 |
+| Anabela Domingues       |   49.3000 |
+| Anabela Domingues       |   25.0000 |
+| Anabela Domingues       |   18.0000 |
+| Anabela Domingues       |   34.0000 |
+| Anabela Domingues       |   12.5000 |
+| Anabela Domingues       |  123.7900 |
+| Anabela Domingues       |   25.8900 |
+| Anabela Domingues       |   13.2500 |
+| Anabela Domingues       |   34.8000 |
+| Helvetius Nagy          |    2.5000 |
+| Helvetius Nagy          |   18.4000 |
+| Helvetius Nagy          |   49.3000 |
+| Helvetius Nagy          |   33.2500 |
+| Helvetius Nagy          |   18.0000 |
+| Helvetius Nagy          |    7.7500 |
+| Helvetius Nagy          |   13.0000 |
+| Helvetius Nagy          |   49.3000 |
+| Helvetius Nagy          |   15.0000 |
+| Palle Ibsen             |   11.2000 |
+| Palle Ibsen             |    5.9000 |
+| Palle Ibsen             |   16.8000 |
+| Palle Ibsen             |   10.4000 |
+| Palle Ibsen             |   10.0000 |
+| Palle Ibsen             |   17.2000 |
+| Palle Ibsen             |   14.4000 |
+| Palle Ibsen             |   10.4000 |
+| Palle Ibsen             |    3.6000 |
+| Palle Ibsen             |   99.0000 |
+| Palle Ibsen             |   14.7000 |
+| Palle Ibsen             |    7.6000 |
+| Palle Ibsen             |   13.0000 |
+| Palle Ibsen             |   10.0000 |
+| Palle Ibsen             |   30.0000 |
+| Palle Ibsen             |    7.4500 |
+| Palle Ibsen             |   13.0000 |
+| Palle Ibsen             |   31.0000 |
+| Palle Ibsen             |   45.6000 |
+| Palle Ibsen             |   14.0000 |
+| Palle Ibsen             |   18.4000 |
+| Palle Ibsen             |    9.6500 |
+| Palle Ibsen             |    7.0000 |
+| Palle Ibsen             |   28.5000 |
+| Palle Ibsen             |   49.3000 |
+| Palle Ibsen             |   18.0000 |
+| Palle Ibsen             |   43.9000 |
+| Palle Ibsen             |   31.0000 |
+| Palle Ibsen             |    4.5000 |
+| Palle Ibsen             |   13.0000 |
+| Palle Ibsen             |   55.0000 |
+| Mary Saveley            |   16.8000 |
+| Mary Saveley            |   15.6000 |
+| Mary Saveley            |   16.8000 |
+| Mary Saveley            |    5.6000 |
+| Mary Saveley            |   10.0000 |
+| Mary Saveley            |   24.8000 |
+| Mary Saveley            |    5.9000 |
+| Mary Saveley            |   24.0000 |
+| Mary Saveley            |    9.6000 |
+| Mary Saveley            |   27.8000 |
+| Mary Saveley            |   24.8000 |
+| Mary Saveley            |   30.0000 |
+| Mary Saveley            |   18.0000 |
+| Mary Saveley            |   49.3000 |
+| Mary Saveley            |   19.0000 |
+| Mary Saveley            |   21.0500 |
+| Mary Saveley            |   10.0000 |
+| Mary Saveley            |    9.6500 |
+| Mary Saveley            |   46.0000 |
+| Mary Saveley            |   12.7500 |
+| Mary Saveley            |   28.5000 |
+| Mary Saveley            |   53.0000 |
+| Mary Saveley            |   14.0000 |
+| Mary Saveley            |    2.5000 |
+| Mary Saveley            |   15.0000 |
+| Paul Henriot            |   14.0000 |
+| Paul Henriot            |    9.8000 |
+| Paul Henriot            |   34.8000 |
+| Paul Henriot            |   17.2000 |
+| Paul Henriot            |   27.8000 |
+| Paul Henriot            |   30.4000 |
+| Paul Henriot            |    6.0000 |
+| Paul Henriot            |    9.6500 |
+| Paul Henriot            |   19.0000 |
+| Paul Henriot            |    7.0000 |
+| Rita Mller              |   14.7000 |
+| Rita Mller              |   30.4000 |
+| Rita Mller              |   36.4000 |
+| Rita Mller              |   36.8000 |
+| Rita Mller              |   26.2000 |
+| Rita Mller              |    6.2000 |
+| Rita Mller              |   14.4000 |
+| Rita Mller              |    7.2000 |
+| Rita Mller              |   10.0000 |
+| Rita Mller              |   19.2000 |
+| Rita Mller              |   28.8000 |
+| Rita Mller              |   10.0000 |
+| Rita Mller              |   32.0000 |
+| Rita Mller              |   28.5000 |
+| Rita Mller              |   19.0000 |
+| Rita Mller              |    2.5000 |
+| Rita Mller              |   36.0000 |
+| Rita Mller              |   15.0000 |
+| Rita Mller              |    9.2000 |
+| Rita Mller              |   21.0000 |
+| Rita Mller              |   12.5000 |
+| Rita Mller              |   24.0000 |
+| Rita Mller              |   33.2500 |
+| Rita Mller              |   38.0000 |
+| Rita Mller              |   32.0000 |
+| Rita Mller              |   18.0000 |
+| Pirkko Koskitalo        |   30.4000 |
+| Pirkko Koskitalo        |   15.2000 |
+| Pirkko Koskitalo        |   36.8000 |
+| Pirkko Koskitalo        |   17.2000 |
+| Pirkko Koskitalo        |   18.6000 |
+| Pirkko Koskitalo        |    8.0000 |
+| Pirkko Koskitalo        |   17.2000 |
+| Pirkko Koskitalo        |   18.6000 |
+| Pirkko Koskitalo        |    7.3000 |
+| Pirkko Koskitalo        |   26.2000 |
+| Pirkko Koskitalo        |   15.6000 |
+| Pirkko Koskitalo        |   26.2000 |
+| Pirkko Koskitalo        |   14.4000 |
+| Pirkko Koskitalo        |   26.2000 |
+| Pirkko Koskitalo        |   22.8000 |
+| Pirkko Koskitalo        |   17.2000 |
+| Pirkko Koskitalo        |   18.0000 |
+| Pirkko Koskitalo        |    6.0000 |
+| Pirkko Koskitalo        |   38.0000 |
+| Pirkko Koskitalo        |   21.0000 |
+| Pirkko Koskitalo        |   17.4500 |
+| Pirkko Koskitalo        |   21.0000 |
+| Pirkko Koskitalo        |   12.5000 |
+| Pirkko Koskitalo        |   18.0000 |
+| Pirkko Koskitalo        |  123.7900 |
+| Pirkko Koskitalo        |   34.0000 |
+| Pirkko Koskitalo        |   36.0000 |
+| Pirkko Koskitalo        |   22.0000 |
+| Pirkko Koskitalo        |   13.2500 |
+| Pirkko Koskitalo        |   23.2500 |
+| Pirkko Koskitalo        |    9.5000 |
+| Pirkko Koskitalo        |   55.0000 |
+| Pirkko Koskitalo        |    7.4500 |
+| Pirkko Koskitalo        |   38.0000 |
+| Pirkko Koskitalo        |   10.0000 |
+| Pirkko Koskitalo        |   18.0000 |
+| Pirkko Koskitalo        |    6.0000 |
+| Paula Parente           |   26.2000 |
+| Paula Parente           |   10.4000 |
+| Paula Parente           |   77.6000 |
+| Paula Parente           |    4.8000 |
+| Paula Parente           |   12.0000 |
+| Paula Parente           |   12.0000 |
+| Paula Parente           |    9.5000 |
+| Paula Parente           |   62.5000 |
+| Paula Parente           |   46.0000 |
+| Paula Parente           |   12.0000 |
+| Paula Parente           |    9.2000 |
+| Paula Parente           |   14.0000 |
+| Paula Parente           |   55.0000 |
+| Paula Parente           |    7.0000 |
+| Paula Parente           |   15.0000 |
+| Paula Parente           |   18.0000 |
+| Paula Parente           |   18.0000 |
+| Paula Parente           |   62.5000 |
+| Paula Parente           |    9.0000 |
+| Karl Jablonski          |    2.0000 |
+| Karl Jablonski          |   27.8000 |
+| Karl Jablonski          |   17.6000 |
+| Karl Jablonski          |   32.0000 |
+| Karl Jablonski          |   15.2000 |
+| Karl Jablonski          |   13.9000 |
+| Karl Jablonski          |   15.5000 |
+| Karl Jablonski          |   11.2000 |
+| Karl Jablonski          |   10.4000 |
+| Karl Jablonski          |   19.0000 |
+| Karl Jablonski          |   10.0000 |
+| Karl Jablonski          |   32.8000 |
+| Karl Jablonski          |   28.5000 |
+| Karl Jablonski          |   38.0000 |
+| Karl Jablonski          |   43.9000 |
+| Karl Jablonski          |    7.7500 |
+| Karl Jablonski          |   97.0000 |
+| Karl Jablonski          |    7.4500 |
+| Karl Jablonski          |   36.0000 |
+| Karl Jablonski          |   15.0000 |
+| Karl Jablonski          |   39.0000 |
+| Karl Jablonski          |   12.0000 |
+| Karl Jablonski          |   31.2300 |
+| Karl Jablonski          |   45.6000 |
+| Karl Jablonski          |   18.0000 |
+| Karl Jablonski          |    9.5000 |
+| Karl Jablonski          |   38.0000 |
+| Karl Jablonski          |   39.0000 |
+| Karl Jablonski          |   62.5000 |
+| Karl Jablonski          |   10.0000 |
+| Karl Jablonski          |    2.5000 |
+| Karl Jablonski          |   49.3000 |
+| Karl Jablonski          |   13.2500 |
+| Karl Jablonski          |   49.3000 |
+| Karl Jablonski          |   19.0000 |
+| Karl Jablonski          |  263.5000 |
+| Karl Jablonski          |   55.0000 |
+| Karl Jablonski          |   17.4500 |
+| Karl Jablonski          |    9.2000 |
+| Karl Jablonski          |   14.0000 |
+| Matti Karttunen         |   24.0000 |
+| Matti Karttunen         |   17.4500 |
+| Matti Karttunen         |   14.0000 |
+| Matti Karttunen         |   46.0000 |
+| Matti Karttunen         |   40.0000 |
+| Matti Karttunen         |   38.0000 |
+| Matti Karttunen         |    4.5000 |
+| Matti Karttunen         |   10.0000 |
+| Matti Karttunen         |   45.6000 |
+| Matti Karttunen         |   18.4000 |
+| Matti Karttunen         |   21.0500 |
+| Matti Karttunen         |   18.0000 |
+| Matti Karttunen         |    9.2000 |
+| Matti Karttunen         |   20.0000 |
+| Matti Karttunen         |   28.5000 |
+| Matti Karttunen         |   18.0000 |
+| Matti Karttunen         |   55.0000 |
+| Zbyszek Piestrzeniewicz |   10.0000 |
+| Zbyszek Piestrzeniewicz |   10.6000 |
+| Zbyszek Piestrzeniewicz |   18.0000 |
+| Zbyszek Piestrzeniewicz |   19.0000 |
+| Zbyszek Piestrzeniewicz |   34.0000 |
+| Zbyszek Piestrzeniewicz |   19.0000 |
+| Zbyszek Piestrzeniewicz |    7.4500 |
+| Zbyszek Piestrzeniewicz |   12.5000 |
+| Zbyszek Piestrzeniewicz |   18.0000 |
+| Zbyszek Piestrzeniewicz |   53.0000 |
+| Zbyszek Piestrzeniewicz |   28.5000 |
+| Zbyszek Piestrzeniewicz |    4.5000 |
+| Zbyszek Piestrzeniewicz |   28.5000 |
+| Zbyszek Piestrzeniewicz |   10.0000 |
+| Zbyszek Piestrzeniewicz |    7.7500 |
+| Zbyszek Piestrzeniewicz |   49.3000 |
++-------------------------+-----------+
+2146 rows in set (0.0025 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,max(c.unitprice) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid  ;
++--------------+------------------+
+| contactname  | max(c.unitprice) |
++--------------+------------------+
+| Maria Anders |         263.5000 |
++--------------+------------------+
+1 row in set (0.0031 sec)
+
+ MySQL  localhost:3306  nor  SQL > desc orderdetails;
++-----------+---------------+------+-----+---------+-------+
+| Field     | Type          | Null | Key | Default | Extra |
++-----------+---------------+------+-----+---------+-------+
+| OrderID   | int(11)       | NO   | PRI | NULL    |       |
+| ProductID | int(11)       | NO   | PRI | NULL    |       |
+| UnitPrice | decimal(10,4) | NO   |     | 0.0000  |       |
+| Quantity  | smallint(2)   | NO   |     | 1       |       |
+| Discount  | double(8,0)   | NO   |     | 0       |       |
++-----------+---------------+------+-----+---------+-------+
+5 rows in set (0.0040 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,max((c.unitprice*c.quantity)) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid  ;
++--------------+-------------------------------+
+| contactname  | max((c.unitprice*c.quantity)) |
++--------------+-------------------------------+
+| Maria Anders |                    15810.0000 |
++--------------+-------------------------------+
+1 row in set (0.0826 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,max(suma((c.unitprice*c.quantity)group by a.contactname)) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid  ;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'group by a.contactname)) from customers a  inner join orders b on a.customerid=b' at line 1
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,max(suma((c.unitprice*c.quantity))) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid;
+ERROR: 1305 (42000): FUNCTION nor.suma does not exist
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,max(sum((c.unitprice*c.quantity))) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid;
+ERROR: 1111 (HY000): Invalid use of group function
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,max(sum(c.unitprice*c.quantity)) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid;
+ERROR: 1111 (HY000): Invalid use of group function
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname;
++-------------------------+-----------------------------+
+| contactname             | sum(c.unitprice*c.quantity) |
++-------------------------+-----------------------------+
+| Alejandra Camino        |                   1467.2900 |
+| Alexander Feuer         |                   5042.2000 |
+| Ana Trujillo            |                   1402.9500 |
+| Anabela Domingues       |                   7310.6200 |
+| Andr Fonseca            |                   8702.2300 |
+| Ann Devon               |                  15033.6600 |
+| Annette Roulet          |                  10272.3500 |
+| Antonio Moreno          |                   7515.3500 |
+| Aria Cruz               |                   4438.9000 |
+| Art Braunschweiger      |                  12489.7000 |
+| Bernardo Batista        |                   6973.6300 |
+| Carine Schmitt          |                   3172.1600 |
+| Carlos Gonzlez          |                  17825.0600 |
+| Carlos Hernndez         |                  23611.5800 |
+| Catherine Dewey         |                  10430.5800 |
+| Christina Berglund      |                  26968.1500 |
+| Daniel Tonini           |                   1992.0500 |
+| Dominique Perrier       |                   2423.3500 |
+| Eduardo Saavedra        |                    836.7000 |
+| Elizabeth Brown         |                   1719.1000 |
+| Elizabeth Lincoln       |                  22607.7000 |
+| Felipe Izquierdo        |                  17889.5500 |
+| Fran Wilson             |                   4258.6000 |
+| Francisco Chang         |                    100.8000 |
+| Frdrique Citeaux        |                  19088.0000 |
+| Georg Pipps             |                  26259.9500 |
+| Giovanni Rovelli        |                   7603.8500 |
+| Guillermo Fernndez      |                   4242.2000 |
+| Hanna Moos              |                   3239.8000 |
+| Hari Kumar              |                  17172.0500 |
+| Helen Bennett           |                   6146.3000 |
+| Helvetius Nagy          |                   1571.2000 |
+| Henriette Pfalzheim     |                  13157.5000 |
+| Horst Kloss             |                 117483.3900 |
+| Howard Snyder           |                  19711.1300 |
+| Isabel de Castro        |                   5317.1000 |
+| Jaime Yorres            |                   3490.0200 |
+| Janete Limeira          |                  12924.4000 |
+| Janine Labrune          |                   1615.9000 |
+| Jean Fresnire           |                  32203.9000 |
+| John Steel              |                    357.0000 |
+| Jonas Bergulfsen        |                   5735.1500 |
+| Jos Pedro Freyre        |                  11830.1000 |
+| Jose Pavarotti          |                 115673.3900 |
+| Jytte Petersen          |                  18138.4500 |
+| Karin Josephs           |                   4954.0000 |
+| Karl Jablonski          |                  29073.4500 |
+| Laurence Lebihan        |                  23850.9500 |
+| Lcia Carvalho           |                  30226.1000 |
+| Lino Rodriguez          |                   7151.5500 |
+| Liu Wong                |                   1947.2400 |
+| Liz Nixon               |                   3361.0000 |
+| Manuel Pereira          |                   1488.7000 |
+| Maria Anders            |                   4596.2000 |
+| Maria Larsson           |                  31831.0500 |
+| Mario Pontes            |                  34101.1500 |
+| Martine Ranc            |                  11666.9000 |
+| Martn Sommer            |                   5297.8000 |
+| Mary Saveley            |                   9937.1000 |
+| Matti Karttunen         |                   3161.3500 |
+| Maurizio Moroni         |                   7555.6000 |
+| Michael Holz            |                  20033.2000 |
+| Miguel Angel Paolino    |                  10812.1500 |
+| Palle Ibsen             |                  16643.8000 |
+| Paolo Accorti           |                   1545.7000 |
+| Pascale Cartrain        |                  24704.4000 |
+| Patricia McKenna        |                  57317.3900 |
+| Patricio Simpson        |                   1814.8000 |
+| Paul Henriot            |                   1480.0000 |
+| Paula Parente           |                   6480.7000 |
+| Paula Wilson            |                  51621.1000 |
+| Pedro Afonso            |                   3810.7500 |
+| Peter Franken           |                  28722.7100 |
+| Philip Cramer           |                  31745.7500 |
+| Pirkko Koskitalo        |                  16617.1000 |
+| Renate Messner          |                  21282.0200 |
+| Rene Phillips           |                  16325.1500 |
+| Rita Mller              |                  10653.8500 |
+| Roland Mendel           |                 110771.8800 |
+| Sergio Gutirrez         |                   2844.1000 |
+| Simon Crowther          |                    649.0000 |
+| Sven Ottlieb            |                   3763.2100 |
+| Thomas Hardy            |                  13806.5000 |
+| Victoria Ashworth       |                   6089.9000 |
+| Yang Wang               |                  12886.3000 |
+| Yoshi Latimer           |                   3063.2000 |
+| Yoshi Tannamuri         |                    522.5000 |
+| Yvonne Moncada          |                   3460.2000 |
+| Zbyszek Piestrzeniewicz |                   3531.9500 |
++-------------------------+-----------------------------+
+89 rows in set (0.0048 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname order by sum(c.unitprice*c.quantity);
++-------------------------+-----------------------------+
+| contactname             | sum(c.unitprice*c.quantity) |
++-------------------------+-----------------------------+
+| Francisco Chang         |                    100.8000 |
+| John Steel              |                    357.0000 |
+| Yoshi Tannamuri         |                    522.5000 |
+| Simon Crowther          |                    649.0000 |
+| Eduardo Saavedra        |                    836.7000 |
+| Ana Trujillo            |                   1402.9500 |
+| Alejandra Camino        |                   1467.2900 |
+| Paul Henriot            |                   1480.0000 |
+| Manuel Pereira          |                   1488.7000 |
+| Paolo Accorti           |                   1545.7000 |
+| Helvetius Nagy          |                   1571.2000 |
+| Janine Labrune          |                   1615.9000 |
+| Elizabeth Brown         |                   1719.1000 |
+| Patricio Simpson        |                   1814.8000 |
+| Liu Wong                |                   1947.2400 |
+| Daniel Tonini           |                   1992.0500 |
+| Dominique Perrier       |                   2423.3500 |
+| Sergio Gutirrez         |                   2844.1000 |
+| Yoshi Latimer           |                   3063.2000 |
+| Matti Karttunen         |                   3161.3500 |
+| Carine Schmitt          |                   3172.1600 |
+| Hanna Moos              |                   3239.8000 |
+| Liz Nixon               |                   3361.0000 |
+| Yvonne Moncada          |                   3460.2000 |
+| Jaime Yorres            |                   3490.0200 |
+| Zbyszek Piestrzeniewicz |                   3531.9500 |
+| Sven Ottlieb            |                   3763.2100 |
+| Pedro Afonso            |                   3810.7500 |
+| Guillermo Fernndez      |                   4242.2000 |
+| Fran Wilson             |                   4258.6000 |
+| Aria Cruz               |                   4438.9000 |
+| Maria Anders            |                   4596.2000 |
+| Karin Josephs           |                   4954.0000 |
+| Alexander Feuer         |                   5042.2000 |
+| Martn Sommer            |                   5297.8000 |
+| Isabel de Castro        |                   5317.1000 |
+| Jonas Bergulfsen        |                   5735.1500 |
+| Victoria Ashworth       |                   6089.9000 |
+| Helen Bennett           |                   6146.3000 |
+| Paula Parente           |                   6480.7000 |
+| Bernardo Batista        |                   6973.6300 |
+| Lino Rodriguez          |                   7151.5500 |
+| Anabela Domingues       |                   7310.6200 |
+| Antonio Moreno          |                   7515.3500 |
+| Maurizio Moroni         |                   7555.6000 |
+| Giovanni Rovelli        |                   7603.8500 |
+| Andr Fonseca            |                   8702.2300 |
+| Mary Saveley            |                   9937.1000 |
+| Annette Roulet          |                  10272.3500 |
+| Catherine Dewey         |                  10430.5800 |
+| Rita Mller              |                  10653.8500 |
+| Miguel Angel Paolino    |                  10812.1500 |
+| Martine Ranc            |                  11666.9000 |
+| Jos Pedro Freyre        |                  11830.1000 |
+| Art Braunschweiger      |                  12489.7000 |
+| Yang Wang               |                  12886.3000 |
+| Janete Limeira          |                  12924.4000 |
+| Henriette Pfalzheim     |                  13157.5000 |
+| Thomas Hardy            |                  13806.5000 |
+| Ann Devon               |                  15033.6600 |
+| Rene Phillips           |                  16325.1500 |
+| Pirkko Koskitalo        |                  16617.1000 |
+| Palle Ibsen             |                  16643.8000 |
+| Hari Kumar              |                  17172.0500 |
+| Carlos Gonzlez          |                  17825.0600 |
+| Felipe Izquierdo        |                  17889.5500 |
+| Jytte Petersen          |                  18138.4500 |
+| Frdrique Citeaux        |                  19088.0000 |
+| Howard Snyder           |                  19711.1300 |
+| Michael Holz            |                  20033.2000 |
+| Renate Messner          |                  21282.0200 |
+| Elizabeth Lincoln       |                  22607.7000 |
+| Carlos Hernndez         |                  23611.5800 |
+| Laurence Lebihan        |                  23850.9500 |
+| Pascale Cartrain        |                  24704.4000 |
+| Georg Pipps             |                  26259.9500 |
+| Christina Berglund      |                  26968.1500 |
+| Peter Franken           |                  28722.7100 |
+| Karl Jablonski          |                  29073.4500 |
+| Lcia Carvalho           |                  30226.1000 |
+| Philip Cramer           |                  31745.7500 |
+| Maria Larsson           |                  31831.0500 |
+| Jean Fresnire           |                  32203.9000 |
+| Mario Pontes            |                  34101.1500 |
+| Paula Wilson            |                  51621.1000 |
+| Patricia McKenna        |                  57317.3900 |
+| Roland Mendel           |                 110771.8800 |
+| Jose Pavarotti          |                 115673.3900 |
+| Horst Kloss             |                 117483.3900 |
++-------------------------+-----------------------------+
+89 rows in set (0.0053 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid max(group by a.contactname order by sum(c.unitprice*c.quantity));
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'max(group by a.contactname order by sum(c.unitprice*c.quantity))' at line 1
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,max(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname order by sum(c.unitprice*c.quantity);
++-------------------------+-----------------------------+
+| contactname             | max(c.unitprice*c.quantity) |
++-------------------------+-----------------------------+
+| Francisco Chang         |                     80.0000 |
+| John Steel              |                    210.0000 |
+| Yoshi Tannamuri         |                    154.0000 |
+| Simon Crowther          |                    220.0000 |
+| Eduardo Saavedra        |                    186.2000 |
+| Ana Trujillo            |                    348.0000 |
+| Alejandra Camino        |                    340.0000 |
+| Paul Henriot            |                    344.0000 |
+| Manuel Pereira          |                    990.0000 |
+| Paolo Accorti           |                    530.0000 |
+| Helvetius Nagy          |                    493.0000 |
+| Janine Labrune          |                    585.0000 |
+| Elizabeth Brown         |                    640.5000 |
+| Patricio Simpson        |                    364.8000 |
+| Liu Wong                |                    742.7400 |
+| Daniel Tonini           |                    439.0000 |
+| Dominique Perrier       |                   1317.5000 |
+| Sergio Gutirrez         |                    527.0000 |
+| Yoshi Latimer           |                   1701.0000 |
+| Matti Karttunen         |                    550.0000 |
+| Carine Schmitt          |                   1733.0600 |
+| Hanna Moos              |                    714.0000 |
+| Liz Nixon               |                   2635.0000 |
+| Yvonne Moncada          |                   1215.0000 |
+| Jaime Yorres            |                    798.0000 |
+| Zbyszek Piestrzeniewicz |                    591.6000 |
+| Sven Ottlieb            |                   1650.0000 |
+| Pedro Afonso            |                   1485.0000 |
+| Guillermo Fernndez      |                   1060.0000 |
+| Fran Wilson             |                   1060.0000 |
+| Aria Cruz               |                    820.0000 |
+| Maria Anders            |                    878.0000 |
+| Karin Josephs           |                   1696.0000 |
+| Alexander Feuer         |                   1044.0000 |
+| Martn Sommer            |                   2475.8000 |
+| Isabel de Castro        |                   1237.9000 |
+| Jonas Bergulfsen        |                   2108.0000 |
+| Victoria Ashworth       |                   1380.0000 |
+| Helen Bennett           |                    855.0000 |
+| Paula Parente           |                   1552.0000 |
+| Bernardo Batista        |                   1000.0000 |
+| Lino Rodriguez          |                    912.0000 |
+| Anabela Domingues       |                   1296.0000 |
+| Antonio Moreno          |                   1050.0000 |
+| Maurizio Moroni         |                   1392.0000 |
+| Giovanni Rovelli        |                   1044.0000 |
+| Andr Fonseca            |                   1600.0000 |
+| Mary Saveley            |                   1972.0000 |
+| Annette Roulet          |                   2475.8000 |
+| Catherine Dewey         |                   2200.0000 |
+| Rita Mller              |                   1600.0000 |
+| Miguel Angel Paolino    |                   3952.5000 |
+| Martine Ranc            |                   3125.0000 |
+| Jos Pedro Freyre        |                   2475.8000 |
+| Art Braunschweiger      |                   4216.0000 |
+| Yang Wang               |                   1590.0000 |
+| Janete Limeira          |                   2310.0000 |
+| Henriette Pfalzheim     |                   1050.0000 |
+| Thomas Hardy            |                   4050.0000 |
+| Ann Devon               |                   2079.0000 |
+| Rene Phillips           |                   2475.0000 |
+| Pirkko Koskitalo        |                   1375.0000 |
+| Palle Ibsen             |                   2736.0000 |
+| Hari Kumar              |                   2176.0000 |
+| Carlos Gonzlez          |                   2200.0000 |
+| Felipe Izquierdo        |                   2088.0000 |
+| Jytte Petersen          |                  10540.0000 |
+| Frdrique Citeaux        |                   3465.0000 |
+| Howard Snyder           |                   7905.0000 |
+| Michael Holz            |                   4456.4400 |
+| Renate Messner          |                   2228.2200 |
+| Elizabeth Lincoln       |                   2958.0000 |
+| Carlos Hernndez         |                   2640.0000 |
+| Laurence Lebihan        |                   1500.0000 |
+| Pascale Cartrain        |                   2750.0000 |
+| Georg Pipps             |                  10540.0000 |
+| Christina Berglund      |                   3952.5000 |
+| Peter Franken           |                   3080.0000 |
+| Karl Jablonski          |                   6587.5000 |
+| Lcia Carvalho           |                   8432.0000 |
+| Philip Cramer           |                   7905.0000 |
+| Maria Larsson           |                   6189.5000 |
+| Jean Fresnire           |                  10329.2000 |
+| Mario Pontes            |                  15810.0000 |
+| Paula Wilson            |                  10540.0000 |
+| Patricia McKenna        |                   9903.2000 |
+| Roland Mendel           |                   6360.0000 |
+| Jose Pavarotti          |                   7427.4000 |
+| Horst Kloss             |                  15810.0000 |
++-------------------------+-----------------------------+
+89 rows in set (0.0054 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname order by sum(c.unitprice*c.quantity) limit 1;
++-----------------+-----------------------------+
+| contactname     | sum(c.unitprice*c.quantity) |
++-----------------+-----------------------------+
+| Francisco Chang |                    100.8000 |
++-----------------+-----------------------------+
+1 row in set (0.0054 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid order by sum(c.unitprice*c.quantity) group limit 1;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'group limit 1' at line 1
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid order by sum(c.unitprice*c.quantity) group by a.contactname limit 1;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'group by a.contactname limit 1' at line 1
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname order by sum(c.unitprice*c.quantity) limit 1;
++-----------------+-----------------------------+
+| contactname     | sum(c.unitprice*c.quantity) |
++-----------------+-----------------------------+
+| Francisco Chang |                    100.8000 |
++-----------------+-----------------------------+
+1 row in set (0.0055 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid order by sum(c.unitprice*c.quantity) group by a.contactname limit 1;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'group by a.contactname limit 1' at line 1
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid order by sum(c.unitprice*c.quantity) group by a.contactname desc limit 1;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'group by a.contactname desc limit 1' at line 1
+
+ MySQL  localhost:3306  nor  SQL > select a.contactname,sum(c.unitprice*c.quantity) from customers a  inner join orders b on a.customerid=b.customerid inner join orderdetails c on b.orderid=c.orderid group by a.contactname order by sum(c.unitprice*c.quantity) desc limit 1;
++-------------+-----------------------------+
+| contactname | sum(c.unitprice*c.quantity) |
++-------------+-----------------------------+
+| Horst Kloss |                 117483.3900 |
++-------------+-----------------------------+
+1 row in set (0.0056 sec)
+
+ MySQL  localhost:3306  nor  SQL > desc orders;
++----------------+---------------+------+-----+---------+----------------+
+| Field          | Type          | Null | Key | Default | Extra          |
++----------------+---------------+------+-----+---------+----------------+
+| OrderID        | int(11)       | NO   | PRI | NULL    | auto_increment |
+| CustomerID     | varchar(5)    | YES  | MUL | NULL    |                |
+| EmployeeID     | int(11)       | YES  | MUL | NULL    |                |
+| OrderDate      | datetime      | YES  | MUL | NULL    |                |
+| RequiredDate   | datetime      | YES  |     | NULL    |                |
+| ShippedDate    | datetime      | YES  | MUL | NULL    |                |
+| ShipVia        | int(11)       | YES  | MUL | NULL    |                |
+| Freight        | decimal(10,4) | YES  |     | 0.0000  |                |
+| ShipName       | varchar(40)   | YES  |     | NULL    |                |
+| ShipAddress    | varchar(60)   | YES  |     | NULL    |                |
+| ShipCity       | varchar(15)   | YES  |     | NULL    |                |
+| ShipRegion     | varchar(15)   | YES  |     | NULL    |                |
+| ShipPostalCode | varchar(10)   | YES  | MUL | NULL    |                |
+| ShipCountry    | varchar(15)   | YES  |     | NULL    |                |
++----------------+---------------+------+-----+---------+----------------+
+14 rows in set (0.0045 sec)
+
+ MySQL  localhost:3306  nor  SQL > desc orderdetails;
++-----------+---------------+------+-----+---------+-------+
+| Field     | Type          | Null | Key | Default | Extra |
++-----------+---------------+------+-----+---------+-------+
+| OrderID   | int(11)       | NO   | PRI | NULL    |       |
+| ProductID | int(11)       | NO   | PRI | NULL    |       |
+| UnitPrice | decimal(10,4) | NO   |     | 0.0000  |       |
+| Quantity  | smallint(2)   | NO   |     | 1       |       |
+| Discount  | double(8,0)   | NO   |     | 0       |       |
++-----------+---------------+------+-----+---------+-------+
+5 rows in set (0.0045 sec)
+
+ MySQL  localhost:3306  nor  SQL > select max(quantity) from orderdetails;
++---------------+
+| max(quantity) |
++---------------+
+|           130 |
++---------------+
+1 row in set (0.0009 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,b.quantity
+                               ... from products a
+                               ... inner join orderdetails b on a.productid=b.prod;
+ERROR: 1054 (42S22): Unknown column 'b.prod' in 'on clause'
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,max(b.quantity) from products a inner join orderdetails b on a.productid=b.productid;
++--------------+-----------------+
+| productname  | max(b.quantity) |
++--------------+-----------------+
+| Alice Mutton |             130 |
++--------------+-----------------+
+1 row in set (0.0043 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,max(b.quantity) from products a inner join orderdetails b on a.productid=b.productid group by a.productname;
++----------------------------------+-----------------+
+| productname                      | max(b.quantity) |
++----------------------------------+-----------------+
+| Alice Mutton                     |             100 |
+| Aniseed Syrup                    |              60 |
+| Boston Crab Meat                 |              91 |
+| Camembert Pierrot                |             100 |
+| Carnarvon Tigers                 |              50 |
+| Chai                             |              80 |
+| Chang                            |             100 |
+| Chartreuse verte                 |             130 |
+| Chef Anton's Cajun Seasoning     |              50 |
+| Chef Anton's Gumbo Mix           |              70 |
+| Chocolade                        |              70 |
+| Cte de Blaye                     |              60 |
+| Escargots de Bourgogne           |              80 |
+| Filo Mix                         |              70 |
+| Flotemysost                      |              60 |
+| Geitost                          |              60 |
+| Genen Shouyu                     |              50 |
+| Gnocchi di nonna Alice           |              70 |
+| Gorgonzola Telino                |              70 |
+| Grandma's Boysenberry Spread     |              70 |
+| Gravad lax                       |              60 |
+| Guaran Fantstica                 |             110 |
+| Gudbrandsdalsost                 |              65 |
+| Gula Malacca                     |             100 |
+| Gumbr Gummibrchen                |              70 |
+| Gustaf's Knckebrd                |              52 |
+| Ikura                            |             100 |
+| Inlagd Sill                      |              60 |
+| Ipoh Coffee                      |              60 |
+| Jack's New England Clam Chowder  |             120 |
+| Konbu                            |              84 |
+| Lakkalikri                       |              90 |
+| Laughing Lumberjack Lager        |              40 |
+| Longlife Tofu                    |              50 |
+| Louisiana Fiery Hot Pepper Sauce |              80 |
+| Louisiana Hot Spiced Okra        |              60 |
+| Manjimup Dried Apples            |             120 |
+| Mascarpone Fabioli               |              50 |
+| Maxilaku                         |              60 |
+| Mishi Kobe Niku                  |              50 |
+| Mozzarella di Giovanni           |              60 |
+| Nord-Ost Matjeshering            |              60 |
+| Northwoods Cranberry Sauce       |              70 |
+| NuNuCa Nu-Nougat-Creme           |              60 |
+| Original Frankfurter grne Soe    |              70 |
+| Outback Lager                    |              60 |
+| Pavlova                          |              65 |
+| Perth Pasties                    |             120 |
+| Pt chinois                       |             120 |
+| Queso Cabrales                   |              50 |
+| Queso Manchego La Pastora        |             100 |
+| Raclette Courdavault             |             110 |
+| Ravioli Angelo                   |              50 |
+| Rd Kaviar                        |              50 |
+| Rhnbru Klosterbier               |             120 |
+| Rogede sild                      |             110 |
+| Rssle Sauerkraut                 |              70 |
+| Sasquatch Ale                    |              90 |
+| Schoggi Schokolade               |             120 |
+| Scottish Longbreads              |              80 |
+| Singaporean Hokkien Fried Mee    |             100 |
+| Sir Rodney's Marmalade           |              50 |
+| Sir Rodney's Scones              |              65 |
+| Sirop d'rable                    |             120 |
+| Spegesild                        |              60 |
+| Steeleye Stout                   |             100 |
+| Tarte au sucre                   |              80 |
+| Teatime Chocolate Biscuits       |              80 |
+| Thringer Rostbratwurst           |              80 |
+| Tofu                             |              70 |
+| Tourtire                         |              80 |
+| Tunnbrd                          |              70 |
+| Uncle Bob's Organic Dried Pears  |              90 |
+| Valkoinen suklaa                 |              40 |
+| Vegie-spread                     |              80 |
+| Wimmers gute Semmelkndel         |             130 |
+| Zaanse koeken                    |              55 |
++----------------------------------+-----------------+
+77 rows in set (0.0034 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity) from products a inner join orderdetails b on a.productid=b.productid group by a.productname;
++----------------------------------+-----------------+
+| productname                      | sum(b.quantity) |
++----------------------------------+-----------------+
+| Alice Mutton                     |             978 |
+| Aniseed Syrup                    |             328 |
+| Boston Crab Meat                 |            1103 |
+| Camembert Pierrot                |            1577 |
+| Carnarvon Tigers                 |             539 |
+| Chai                             |             828 |
+| Chang                            |            1057 |
+| Chartreuse verte                 |             793 |
+| Chef Anton's Cajun Seasoning     |             453 |
+| Chef Anton's Gumbo Mix           |             298 |
+| Chocolade                        |             138 |
+| Cte de Blaye                     |             623 |
+| Escargots de Bourgogne           |             534 |
+| Filo Mix                         |             500 |
+| Flotemysost                      |            1057 |
+| Geitost                          |             755 |
+| Genen Shouyu                     |             122 |
+| Gnocchi di nonna Alice           |            1263 |
+| Gorgonzola Telino                |            1397 |
+| Grandma's Boysenberry Spread     |             301 |
+| Gravad lax                       |             125 |
+| Guaran Fantstica                 |            1125 |
+| Gudbrandsdalsost                 |             714 |
+| Gula Malacca                     |             601 |
+| Gumbr Gummibrchen                |             753 |
+| Gustaf's Knckebrd                |             348 |
+| Ikura                            |             742 |
+| Inlagd Sill                      |             805 |
+| Ipoh Coffee                      |             580 |
+| Jack's New England Clam Chowder  |             981 |
+| Konbu                            |             891 |
+| Lakkalikri                       |             981 |
+| Laughing Lumberjack Lager        |             184 |
+| Longlife Tofu                    |             297 |
+| Louisiana Fiery Hot Pepper Sauce |             745 |
+| Louisiana Hot Spiced Okra        |             239 |
+| Manjimup Dried Apples            |             886 |
+| Mascarpone Fabioli               |             297 |
+| Maxilaku                         |             520 |
+| Mishi Kobe Niku                  |              95 |
+| Mozzarella di Giovanni           |             806 |
+| Nord-Ost Matjeshering            |             612 |
+| Northwoods Cranberry Sauce       |             372 |
+| NuNuCa Nu-Nougat-Creme           |             318 |
+| Original Frankfurter grne Soe    |             791 |
+| Outback Lager                    |             817 |
+| Pavlova                          |            1158 |
+| Perth Pasties                    |             722 |
+| Pt chinois                       |             903 |
+| Queso Cabrales                   |             706 |
+| Queso Manchego La Pastora        |             344 |
+| Raclette Courdavault             |            1496 |
+| Ravioli Angelo                   |             434 |
+| Rd Kaviar                        |             293 |
+| Rhnbru Klosterbier               |            1155 |
+| Rogede sild                      |             508 |
+| Rssle Sauerkraut                 |             640 |
+| Sasquatch Ale                    |             506 |
+| Schoggi Schokolade               |             365 |
+| Scottish Longbreads              |             799 |
+| Singaporean Hokkien Fried Mee    |             697 |
+| Sir Rodney's Marmalade           |             313 |
+| Sir Rodney's Scones              |            1016 |
+| Sirop d'rable                    |             603 |
+| Spegesild                        |             548 |
+| Steeleye Stout                   |             883 |
+| Tarte au sucre                   |            1083 |
+| Teatime Chocolate Biscuits       |             723 |
+| Thringer Rostbratwurst           |             746 |
+| Tofu                             |             404 |
+| Tourtire                         |             755 |
+| Tunnbrd                          |             580 |
+| Uncle Bob's Organic Dried Pears  |             763 |
+| Valkoinen suklaa                 |             235 |
+| Vegie-spread                     |             445 |
+| Wimmers gute Semmelkndel         |             740 |
+| Zaanse koeken                    |             485 |
++----------------------------------+-----------------+
+77 rows in set (0.0034 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity);
++----------------------------------+-----------------+
+| productname                      | sum(b.quantity) |
++----------------------------------+-----------------+
+| Mishi Kobe Niku                  |              95 |
+| Genen Shouyu                     |             122 |
+| Gravad lax                       |             125 |
+| Chocolade                        |             138 |
+| Laughing Lumberjack Lager        |             184 |
+| Valkoinen suklaa                 |             235 |
+| Louisiana Hot Spiced Okra        |             239 |
+| Rd Kaviar                        |             293 |
+| Longlife Tofu                    |             297 |
+| Mascarpone Fabioli               |             297 |
+| Chef Anton's Gumbo Mix           |             298 |
+| Grandma's Boysenberry Spread     |             301 |
+| Sir Rodney's Marmalade           |             313 |
+| NuNuCa Nu-Nougat-Creme           |             318 |
+| Aniseed Syrup                    |             328 |
+| Queso Manchego La Pastora        |             344 |
+| Gustaf's Knckebrd                |             348 |
+| Schoggi Schokolade               |             365 |
+| Northwoods Cranberry Sauce       |             372 |
+| Tofu                             |             404 |
+| Ravioli Angelo                   |             434 |
+| Vegie-spread                     |             445 |
+| Chef Anton's Cajun Seasoning     |             453 |
+| Zaanse koeken                    |             485 |
+| Filo Mix                         |             500 |
+| Sasquatch Ale                    |             506 |
+| Rogede sild                      |             508 |
+| Maxilaku                         |             520 |
+| Escargots de Bourgogne           |             534 |
+| Carnarvon Tigers                 |             539 |
+| Spegesild                        |             548 |
+| Ipoh Coffee                      |             580 |
+| Tunnbrd                          |             580 |
+| Gula Malacca                     |             601 |
+| Sirop d'rable                    |             603 |
+| Nord-Ost Matjeshering            |             612 |
+| Cte de Blaye                     |             623 |
+| Rssle Sauerkraut                 |             640 |
+| Singaporean Hokkien Fried Mee    |             697 |
+| Queso Cabrales                   |             706 |
+| Gudbrandsdalsost                 |             714 |
+| Perth Pasties                    |             722 |
+| Teatime Chocolate Biscuits       |             723 |
+| Wimmers gute Semmelkndel         |             740 |
+| Ikura                            |             742 |
+| Louisiana Fiery Hot Pepper Sauce |             745 |
+| Thringer Rostbratwurst           |             746 |
+| Gumbr Gummibrchen                |             753 |
+| Geitost                          |             755 |
+| Tourtire                         |             755 |
+| Uncle Bob's Organic Dried Pears  |             763 |
+| Original Frankfurter grne Soe    |             791 |
+| Chartreuse verte                 |             793 |
+| Scottish Longbreads              |             799 |
+| Inlagd Sill                      |             805 |
+| Mozzarella di Giovanni           |             806 |
+| Outback Lager                    |             817 |
+| Chai                             |             828 |
+| Steeleye Stout                   |             883 |
+| Manjimup Dried Apples            |             886 |
+| Konbu                            |             891 |
+| Pt chinois                       |             903 |
+| Alice Mutton                     |             978 |
+| Lakkalikri                       |             981 |
+| Jack's New England Clam Chowder  |             981 |
+| Sir Rodney's Scones              |            1016 |
+| Chang                            |            1057 |
+| Flotemysost                      |            1057 |
+| Tarte au sucre                   |            1083 |
+| Boston Crab Meat                 |            1103 |
+| Guaran Fantstica                 |            1125 |
+| Rhnbru Klosterbier               |            1155 |
+| Pavlova                          |            1158 |
+| Gnocchi di nonna Alice           |            1263 |
+| Gorgonzola Telino                |            1397 |
+| Raclette Courdavault             |            1496 |
+| Camembert Pierrot                |            1577 |
++----------------------------------+-----------------+
+77 rows in set (0.0037 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity) limit 1;
++-----------------+-----------------+
+| productname     | sum(b.quantity) |
++-----------------+-----------------+
+| Mishi Kobe Niku |              95 |
++-----------------+-----------------+
+1 row in set (0.0038 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity) desc limit 1;
++-------------------+-----------------+
+| productname       | sum(b.quantity) |
++-------------------+-----------------+
+| Camembert Pierrot |            1577 |
++-------------------+-----------------+
+1 row in set (0.0037 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity*b.unitprice) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity*b.unitprice) desc limit 1;
++--------------+-----------------------------+
+| productname  | sum(b.quantity*b.unitprice) |
++--------------+-----------------------------+
+| Cte de Blaye |                 149984.2000 |
++--------------+-----------------------------+
+1 row in set (0.0045 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity*b.unitprice) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity*b.unitprice) ;
++----------------------------------+-----------------------------+
+| productname                      | sum(b.quantity*b.unitprice) |
++----------------------------------+-----------------------------+
+| Chocolade                        |                   1542.7500 |
+| Geitost                          |                   1713.5000 |
+| Genen Shouyu                     |                   1813.5000 |
+| Laughing Lumberjack Lager        |                   2562.0000 |
+| Longlife Tofu                    |                   2566.0000 |
+| Gravad lax                       |                   3047.2000 |
+| Aniseed Syrup                    |                   3080.0000 |
+| Filo Mix                         |                   3383.8000 |
+| Valkoinen suklaa                 |                   3510.0000 |
+| Louisiana Hot Spiced Okra        |                   3519.0000 |
+| NuNuCa Nu-Nougat-Creme           |                   4051.6000 |
+| Rd Kaviar                        |                   4200.0000 |
+| Zaanse koeken                    |                   4358.6000 |
+| Rogede sild                      |                   4740.5000 |
+| Guaran Fantstica                 |                   4782.6000 |
+| Tunnbrd                          |                   4840.2000 |
+| Tourtire                         |                   5121.0000 |
+| Konbu                            |                   5234.4000 |
+| Chef Anton's Gumbo Mix           |                   5801.1500 |
+| Spegesild                        |                   6144.0000 |
+| Teatime Chocolate Biscuits       |                   6159.5000 |
+| Escargots de Bourgogne           |                   6664.7500 |
+| Sasquatch Ale                    |                   6678.0000 |
+| Gustaf's Knckebrd                |                   7232.4000 |
+| Grandma's Boysenberry Spread     |                   7345.0000 |
+| Ravioli Angelo                   |                   7807.8000 |
+| Tofu                             |                   8630.4000 |
+| Rhnbru Klosterbier               |                   8650.5500 |
+| Mishi Kobe Niku                  |                   8827.0000 |
+| Jack's New England Clam Chowder  |                   9098.1000 |
+| Mascarpone Fabioli               |                   9171.2000 |
+| Singaporean Hokkien Fried Mee    |                   9332.4000 |
+| Scottish Longbreads              |                   9362.5000 |
+| Chef Anton's Cajun Seasoning     |                   9424.8000 |
+| Maxilaku                         |                   9500.0000 |
+| Sir Rodney's Scones              |                   9636.0000 |
+| Original Frankfurter grne Soe    |                   9685.0000 |
+| Gula Malacca                     |                  10524.2000 |
+| Outback Lager                    |                  11472.0000 |
+| Queso Manchego La Pastora        |                  12866.8000 |
+| Chartreuse verte                 |                  13150.8000 |
+| Northwoods Cranberry Sauce       |                  13760.0000 |
+| Queso Cabrales                   |                  13902.0000 |
+| Chai                             |                  14277.6000 |
+| Steeleye Stout                   |                  14536.8000 |
+| Inlagd Sill                      |                  14542.6000 |
+| Louisiana Fiery Hot Pepper Sauce |                  14607.0000 |
+| Nord-Ost Matjeshering            |                  14775.5400 |
+| Schoggi Schokolade               |                  15231.5000 |
+| Gorgonzola Telino                |                  16172.5000 |
+| Sirop d'rable                    |                  16438.8000 |
+| Lakkalikri                       |                  16794.0000 |
+| Vegie-spread                     |                  17696.3000 |
+| Chang                            |                  18559.2000 |
+| Pavlova                          |                  18748.0500 |
+| Boston Crab Meat                 |                  19048.3000 |
+| Pt chinois                       |                  19512.0000 |
+| Flotemysost                      |                  20876.5000 |
+| Perth Pasties                    |                  21510.2000 |
+| Gumbr Gummibrchen                |                  21534.9000 |
+| Ikura                            |                  22140.2000 |
+| Uncle Bob's Organic Dried Pears  |                  22464.0000 |
+| Wimmers gute Semmelkndel         |                  23009.0000 |
+| Sir Rodney's Marmalade           |                  23635.8000 |
+| Gudbrandsdalsost                 |                  24307.2000 |
+| Ipoh Coffee                      |                  25079.2000 |
+| Mozzarella di Giovanni           |                  25738.8000 |
+| Rssle Sauerkraut                 |                  26865.6000 |
+| Carnarvon Tigers                 |                  31987.5000 |
+| Alice Mutton                     |                  35482.2000 |
+| Manjimup Dried Apples            |                  44742.6000 |
+| Gnocchi di nonna Alice           |                  45121.2000 |
+| Tarte au sucre                   |                  49827.9000 |
+| Camembert Pierrot                |                  50286.0000 |
+| Raclette Courdavault             |                  76296.0000 |
+| Thringer Rostbratwurst           |                  87736.4000 |
+| Cte de Blaye                     |                 149984.2000 |
++----------------------------------+-----------------------------+
+77 rows in set (0.0043 sec)
+
+ MySQL  localhost:3306  nor  SQL > select a.productname,sum(b.quantity*b.unitprice) from products a inner join orderdetails b on a.productid=b.productid group by a.productname order by sum(b.quantity*b.unitprice) limit 1;
++-------------+-----------------------------+
+| productname | sum(b.quantity*b.unitprice) |
++-------------+-----------------------------+
+| Chocolade   |                   1542.7500 |
++-------------+-----------------------------+
+1 row in set (0.0045 sec)
+
+ MySQL  localhost:3306  nor  SQL >
+
+
+
+| Michael   |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Robert    |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Laura     |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
+| Anne      |
++-----------+
+830 rows in set (0.0037 sec)
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*)from employees b
+ inner join orders a on b.employeeid=a.employeeid group by employeeid;
+ERROR: 1052 (23000): Column 'employeeid' in group statement is ambiguous
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*)from employees b
+ inner join orders a on b.employeeid=a.employeeid group by a.employeeid;
++-----------+----------+
+| firstname | count(*) |
++-----------+----------+
+| Nancy     |      123 |
+| Andrew    |       96 |
+| Janet     |      127 |
+| Margaret  |      156 |
+| Steven    |       42 |
+| Michael   |       67 |
+| Robert    |       72 |
+| Laura     |      104 |
+| Anne      |       43 |
++-----------+----------+
+9 rows in set (0.0279 sec)
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*)from employees b
+ inner join orders a on b.employeeid=a.employeeid order by count(*) group by a.e
+mployeeid;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that
+ corresponds to your MySQL server version for the right syntax to use near 'grou
+p by a.employeeid' at line 1
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*)from employees b
+ inner join orders a on b.employeeid=a.employeeid group by a.employeeid order by
+ count(*);
++-----------+----------+
+| firstname | count(*) |
++-----------+----------+
+| Steven    |       42 |
+| Anne      |       43 |
+| Michael   |       67 |
+| Robert    |       72 |
+| Andrew    |       96 |
+| Laura     |      104 |
+| Nancy     |      123 |
+| Janet     |      127 |
+| Margaret  |      156 |
++-----------+----------+
+9 rows in set (0.0060 sec)
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*)from employees b
+ inner join orders a on b.employeeid=a.employeeid group by a.employeeid order by
+ count(*) limit 1;
++-----------+----------+
+| firstname | count(*) |
++-----------+----------+
+| Steven    |       42 |
++-----------+----------+
+1 row in set (0.0061 sec)
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*) as ordenes from
+ employees b inner join orders a on b.employeeid=a.employeeid group by a.employe
+eid order by count(*) limit 1;
++-----------+---------+
+| firstname | ordenes |
++-----------+---------+
+| Steven    |      42 |
++-----------+---------+
+1 row in set (0.0059 sec)
+
+MySQL [localhost ssl/northwind] SQL> select b.firstname,count(*) as ordenes from
+ employees b inner join orders a on b.employeeid=a.employeeid group by a.employe
+eid order by count(*) desc limit 1;
++-----------+---------+
+| firstname | ordenes |
++-----------+---------+
+| Margaret  |     156 |
++-----------+---------+
+1 row in set (0.0069 sec)
+
+MySQL [localhost ssl/northwind] SQL> desc products;
++-----------------+---------------+------+-----+---------+----------------+
+| Field           | Type          | Null | Key | Default | Extra          |
++-----------------+---------------+------+-----+---------+----------------+
+| ProductID       | int(11)       | NO   | PRI | NULL    | auto_increment |
+| ProductName     | varchar(40)   | NO   | MUL | NULL    |                |
+| SupplierID      | int(11)       | YES  | MUL | NULL    |                |
+| CategoryID      | int(11)       | YES  | MUL | NULL    |                |
+| QuantityPerUnit | varchar(20)   | YES  |     | NULL    |                |
+| UnitPrice       | decimal(10,4) | YES  |     | 0.0000  |                |
+| UnitsInStock    | smallint(2)   | YES  |     | 0       |                |
+| UnitsOnOrder    | smallint(2)   | YES  |     | 0       |                |
+| ReorderLevel    | smallint(2)   | YES  |     | 0       |                |
+| Discontinued    | bit(1)        | NO   |     | b'0'    |                |
++-----------------+---------------+------+-----+---------+----------------+
+10 rows in set (0.0080 sec)
+
+MySQL [localhost ssl/northwind] SQL> desc suppliers
+                                  -> ;
++--------------+-------------+------+-----+---------+----------------+
+| Field        | Type        | Null | Key | Default | Extra          |
++--------------+-------------+------+-----+---------+----------------+
+| SupplierID   | int(11)     | NO   | PRI | NULL    | auto_increment |
+| CompanyName  | varchar(40) | NO   | MUL | NULL    |                |
+| ContactName  | varchar(30) | YES  |     | NULL    |                |
+| ContactTitle | varchar(30) | YES  |     | NULL    |                |
+| Address      | varchar(60) | YES  |     | NULL    |                |
+| City         | varchar(15) | YES  |     | NULL    |                |
+| Region       | varchar(15) | YES  |     | NULL    |                |
+| PostalCode   | varchar(10) | YES  | MUL | NULL    |                |
+| Country      | varchar(15) | YES  |     | NULL    |                |
+| Phone        | varchar(24) | YES  |     | NULL    |                |
+| Fax          | varchar(24) | YES  |     | NULL    |                |
+| HomePage     | mediumtext  | YES  |     | NULL    |                |
++--------------+-------------+------+-----+---------+----------------+
+12 rows in set (0.0071 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.productname,b.unitin
+stock,b.unitinorder from suppliers a inner join products b on a.supplierid=b.sup
+plierid limit 10;
+ERROR: 1054 (42S22): Unknown column 'b.unitinstock' in 'field list'
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.productname,b.unitsi
+nstock,b.unitinorder from suppliers a inner join products b on a.supplierid=b.su
+pplierid limit 10;
+ERROR: 1054 (42S22): Unknown column 'b.unitinorder' in 'field list'
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.productname,b.unitsi
+nstock,b.unitsonorder from suppliers a inner join products b on a.supplierid=b.s
+upplierid limit 10;
++----------------------------+---------------------------------+--------------+-
+-------------+
+| companyname                | productname                     | unitsinstock |
+unitsonorder |
++----------------------------+---------------------------------+--------------+-
+-------------+
+| Exotic Liquids             | Chai                            |           39 |
+           0 |
+| Exotic Liquids             | Chang                           |           17 |
+          40 |
+| Exotic Liquids             | Aniseed Syrup                   |           13 |
+          70 |
+| New Orleans Cajun Delights | Chef Anton's Cajun Seasoning    |           53 |
+           0 |
+| New Orleans Cajun Delights | Chef Anton's Gumbo Mix          |            0 |
+           0 |
+| Grandma Kelly's Homestead  | Grandma's Boysenberry Spread    |          120 |
+           0 |
+| Grandma Kelly's Homestead  | Uncle Bob's Organic Dried Pears |           15 |
+           0 |
+| Grandma Kelly's Homestead  | Northwoods Cranberry Sauce      |            6 |
+           0 |
+| Tokyo Traders              | Mishi Kobe Niku                 |           29 |
+           0 |
+| Tokyo Traders              | Ikura                           |           31 |
+           0 |
++----------------------------+---------------------------------+--------------+-
+-------------+
+10 rows in set (0.0876 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.productname,b.unitsi
+nstock,b.unitsonorder from suppliers a inner join products b on a.supplierid=b.s
+upplierid where unitsinstock<1 and unitsonorder<1;
++---------------------------------+------------------------+--------------+-----
+---------+
+| companyname                     | productname            | unitsinstock | unit
+sonorder |
++---------------------------------+------------------------+--------------+-----
+---------+
+| New Orleans Cajun Delights      | Chef Anton's Gumbo Mix |            0 |
+       0 |
+| Pavlova, Ltd.                   | Alice Mutton           |            0 |
+       0 |
+| Plutzer Lebensmittelgromrkte AG | Thringer Rostbratwurst |            0 |
+       0 |
+| G'day, Mate                     | Perth Pasties          |            0 |
+       0 |
+| Plutzer Lebensmittelgromrkte AG | Tacos                  |            0 |
+       0 |
++---------------------------------+------------------------+--------------+-----
+---------+
+5 rows in set (0.0018 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitsinstock,b.units
+onorder from suppliers a inner join products b on a.supplierid=b.supplierid wher
+e unitsinstock<1 and unitsonorder<1;
++---------------------------------+--------------+--------------+
+| companyname                     | unitsinstock | unitsonorder |
++---------------------------------+--------------+--------------+
+| New Orleans Cajun Delights      |            0 |            0 |
+| Pavlova, Ltd.                   |            0 |            0 |
+| Plutzer Lebensmittelgromrkte AG |            0 |            0 |
+| G'day, Mate                     |            0 |            0 |
+| Plutzer Lebensmittelgromrkte AG |            0 |            0 |
++---------------------------------+--------------+--------------+
+5 rows in set (0.0017 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitsprice,b.unitson
+order,suma(b.unitsprice*b.unitsonorder) from suppliers a inner join products b o
+n a.supplierid=b.supplierid group by a.companyname order by suma(b.unitprice*b.u
+nitsonorder);
+ERROR: 1054 (42S22): Unknown column 'b.unitsprice' in 'field list'
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitsprice,b.unitson
+order,suma(b.unitprice*b.unitsonorder) from suppliers a inner join products b on
+ a.supplierid=b.supplierid group by a.companyname order by suma(b.unitprice*b.un
+itsonorder);
+ERROR: 1054 (42S22): Unknown column 'b.unitsprice' in 'field list'
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitprice,b.unitsono
+rder,suma(b.unitprice*b.unitsonorder) from suppliers a inner join products b on
+a.supplierid=b.supplierid group by a.companyname order by suma(b.unitprice*b.uni
+tsonorder);
+ERROR: 1305 (42000): FUNCTION northwind.suma does not exist
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitprice,b.unitsono
+rder,sum(b.unitprice*b.unitsonorder) from suppliers a inner join products b on a
+.supplierid=b.supplierid group by a.companyname order by suma(b.unitprice*b.unit
+sonorder);
+ERROR: 1305 (42000): FUNCTION northwind.suma does not exist
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitprice,b.unitsono
+rder,sum(b.unitprice*b.unitsonorder) from suppliers a inner join products b on a
+.supplierid=b.supplierid group by a.companyname order by sum(b.unitprice*b.units
+onorder);
++----------------------------------------+-----------+--------------+-----------
+----------------------+
+| companyname                            | unitprice | unitsonorder | sum(b.unit
+price*b.unitsonorder) |
++----------------------------------------+-----------+--------------+-----------
+----------------------+
+| Forts d'rables                         |   28.5000 |            0 |
+               0.0000 |
+| Ma Maison                              |    7.4500 |            0 |
+               0.0000 |
+| PB Knckebrd AB                         |   21.0000 |            0 |
+               0.0000 |
+| G'day, Mate                            |   53.0000 |            0 |
+               0.0000 |
+| Mayumi's                               |    6.0000 |            0 |
+               0.0000 |
+| Aux joyeux ecclsiastiques              |  263.5000 |            0 |
+               0.0000 |
+| Gai pturage                            |   55.0000 |            0 |
+               0.0000 |
+| New England Seafood Cannery            |   18.4000 |            0 |
+               0.0000 |
+| Refrescos Americanas LTDA              |    4.5000 |            0 |
+               0.0000 |
+| Bigfoot Breweries                      |   14.0000 |            0 |
+               0.0000 |
+| Grandma Kelly's Homestead              |   25.0000 |            0 |
+               0.0000 |
+| Heli Swaren GmbH & Co. KG              |   14.0000 |            0 |
+               0.0000 |
+| Nord-Ost-Fisch Handelsgesellschaft mbH |   25.8900 |            0 |
+               0.0000 |
+| Escargots Nouveaux                     |   13.2500 |            0 |
+               0.0000 |
+| Norske Meierier                        |    2.5000 |            0 |
+               0.0000 |
+| Pavlova, Ltd.                          |   17.4500 |            0 |
+             150.0000 |
+| Tokyo Traders                          |   97.0000 |            0 |
+             200.0000 |
+| Pasta Buttini s.r.l.                   |   38.0000 |           10 |
+             380.0000 |
+| Leka Trading                           |   14.0000 |            0 |
+             460.0000 |
+| Specialty Biscuits, Ltd.               |    9.2000 |            0 |
+             525.0000 |
+| Cooperativa de Quesos 'Las Cabras'     |   21.0000 |           30 |
+             630.0000 |
+| Lyngbysild                             |    9.5000 |           70 |
+             665.0000 |
+| Zaanse Snoepfabriek                    |    9.5000 |            0 |
+             892.5000 |
+| Karkki Oy                              |   20.0000 |           60 |
+            1200.0000 |
+| Svensk Sjfda AB                        |   19.0000 |            0 |
+            1300.0000 |
+| Exotic Liquids                         |   18.0000 |            0 |
+            1460.0000 |
+| New Orleans Cajun Delights             |   22.0000 |            0 |
+            1700.0000 |
+| Formaggi Fortini s.r.l.                |   12.5000 |           70 |
+            2155.0000 |
+| Plutzer Lebensmittelgromrkte AG        |   45.6000 |            0 |
+            2660.0000 |
++----------------------------------------+-----------+--------------+-----------
+----------------------+
+29 rows in set (0.0760 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitprice,b.unitsono
+rder,sum(b.unitprice*b.unitsonorder) from suppliers a inner join products b on a
+.supplierid=b.supplierid group by a.companyname order by sum(b.unitprice*b.units
+onorder) desc limit 1;
++---------------------------------+-----------+--------------+------------------
+---------------+
+| companyname                     | unitprice | unitsonorder | sum(b.unitprice*b
+.unitsonorder) |
++---------------------------------+-----------+--------------+------------------
+---------------+
+| Plutzer Lebensmittelgromrkte AG |   45.6000 |            0 |
+     2660.0000 |
++---------------------------------+-----------+--------------+------------------
+---------------+
+1 row in set (0.0152 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,b.unitprice,b.unitsono
+rder,sum(b.unitprice*b.unitsonorder) as total from suppliers a inner join produc
+ts b on a.supplierid=b.supplierid group by a.companyname order by sum(b.unitpric
+e*b.unitsonorder) desc limit 1;
++---------------------------------+-----------+--------------+-----------+
+| companyname                     | unitprice | unitsonorder | total     |
++---------------------------------+-----------+--------------+-----------+
+| Plutzer Lebensmittelgromrkte AG |   45.6000 |            0 | 2660.0000 |
++---------------------------------+-----------+--------------+-----------+
+1 row in set (0.0021 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.companyname,sum(b.unitprice*b.unit
+sonorder) as total from suppliers a inner join products b on a.supplierid=b.supp
+lierid group by a.companyname order by sum(b.unitprice*b.unitsonorder) desc limi
+t 1;
+
++---------------------------------+-----------+
+| companyname                     | total     |
++---------------------------------+-----------+
+| Plutzer Lebensmittelgromrkte AG | 2660.0000 |
++---------------------------------+-----------+
+1 row in set (0.0024 sec)
+
+MySQL [localhost ssl/northwind] SQL> desc products
+                                  -> ;
++-----------------+---------------+------+-----+---------+----------------+
+| Field           | Type          | Null | Key | Default | Extra          |
++-----------------+---------------+------+-----+---------+----------------+
+| ProductID       | int(11)       | NO   | PRI | NULL    | auto_increment |
+| ProductName     | varchar(40)   | NO   | MUL | NULL    |                |
+| SupplierID      | int(11)       | YES  | MUL | NULL    |                |
+| CategoryID      | int(11)       | YES  | MUL | NULL    |                |
+| QuantityPerUnit | varchar(20)   | YES  |     | NULL    |                |
+| UnitPrice       | decimal(10,4) | YES  |     | 0.0000  |                |
+| UnitsInStock    | smallint(2)   | YES  |     | 0       |                |
+| UnitsOnOrder    | smallint(2)   | YES  |     | 0       |                |
+| ReorderLevel    | smallint(2)   | YES  |     | 0       |                |
+| Discontinued    | bit(1)        | NO   |     | b'0'    |                |
++-----------------+---------------+------+-----+---------+----------------+
+10 rows in set (0.0041 sec)
+
+MySQL [localhost ssl/northwind] SQL> desc orderdetails;
++-----------+---------------+------+-----+---------+-------+
+| Field     | Type          | Null | Key | Default | Extra |
++-----------+---------------+------+-----+---------+-------+
+| OrderID   | int(11)       | NO   | PRI | NULL    |       |
+| ProductID | int(11)       | NO   | PRI | NULL    |       |
+| UnitPrice | decimal(10,4) | NO   |     | 0.0000  |       |
+| Quantity  | smallint(2)   | NO   |     | 1       |       |
+| Discount  | double(8,0)   | NO   |     | 0       |       |
++-----------+---------------+------+-----+---------+-------+
+5 rows in set (0.0061 sec)
+
+MySQL [localhost ssl/northwind] SQL> desc orders;
++----------------+---------------+------+-----+---------+----------------+
+| Field          | Type          | Null | Key | Default | Extra          |
++----------------+---------------+------+-----+---------+----------------+
+| OrderID        | int(11)       | NO   | PRI | NULL    | auto_increment |
+| CustomerID     | varchar(5)    | YES  | MUL | NULL    |                |
+| EmployeeID     | int(11)       | YES  | MUL | NULL    |                |
+| OrderDate      | datetime      | YES  | MUL | NULL    |                |
+| RequiredDate   | datetime      | YES  |     | NULL    |                |
+| ShippedDate    | datetime      | YES  | MUL | NULL    |                |
+| ShipVia        | int(11)       | YES  | MUL | NULL    |                |
+| Freight        | decimal(10,4) | YES  |     | 0.0000  |                |
+| ShipName       | varchar(40)   | YES  |     | NULL    |                |
+| ShipAddress    | varchar(60)   | YES  |     | NULL    |                |
+| ShipCity       | varchar(15)   | YES  |     | NULL    |                |
+| ShipRegion     | varchar(15)   | YES  |     | NULL    |                |
+| ShipPostalCode | varchar(10)   | YES  | MUL | NULL    |                |
+| ShipCountry    | varchar(15)   | YES  |     | NULL    |                |
++----------------+---------------+------+-----+---------+----------------+
+14 rows in set (0.0047 sec)
+
+MySQL [localhost ssl/northwind] SQL> desc customers;
++--------------+-------------+------+-----+---------+-------+
+| Field        | Type        | Null | Key | Default | Extra |
++--------------+-------------+------+-----+---------+-------+
+| CustomerID   | varchar(5)  | NO   | PRI | NULL    |       |
+| CompanyName  | varchar(40) | NO   | MUL | NULL    |       |
+| ContactName  | varchar(30) | YES  |     | NULL    |       |
+| ContactTitle | varchar(30) | YES  |     | NULL    |       |
+| Address      | varchar(60) | YES  |     | NULL    |       |
+| City         | varchar(15) | YES  | MUL | NULL    |       |
+| Region       | varchar(15) | YES  | MUL | NULL    |       |
+| PostalCode   | varchar(10) | YES  | MUL | NULL    |       |
+| Country      | varchar(15) | YES  |     | NULL    |       |
+| Phone        | varchar(24) | YES  |     | NULL    |       |
+| Fax          | varchar(24) | YES  |     | NULL    |       |
++--------------+-------------+------+-----+---------+-------+
+11 rows in set (0.0051 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname from pro
+ducts a inner join orderdetails b on b.productid=a.productid
+                                  -> inner join orders c on c.orderid=b.orderid
+                                  -> inner join customers d on d.customerid=c.cu
+stomerid where d.contactname='Horst Kloss';
++----------------------------------+-------------+
+| productname                      | contactname |
++----------------------------------+-------------+
+| Ikura                            | Horst Kloss |
+| Gorgonzola Telino                | Horst Kloss |
+| Geitost                          | Horst Kloss |
+| Boston Crab Meat                 | Horst Kloss |
+| Lakkalikri                       | Horst Kloss |
+| Chai                             | Horst Kloss |
+| Boston Crab Meat                 | Horst Kloss |
+| Perth Pasties                    | Horst Kloss |
+| Steeleye Stout                   | Horst Kloss |
+| Tarte au sucre                   | Horst Kloss |
+| Inlagd Sill                      | Horst Kloss |
+| Northwoods Cranberry Sauce       | Horst Kloss |
+| Teatime Chocolate Biscuits       | Horst Kloss |
+| Singaporean Hokkien Fried Mee    | Horst Kloss |
+| Chartreuse verte                 | Horst Kloss |
+| Camembert Pierrot                | Horst Kloss |
+| Chang                            | Horst Kloss |
+| Zaanse koeken                    | Horst Kloss |
+| Sirop d'rable                    | Horst Kloss |
+| Longlife Tofu                    | Horst Kloss |
+| Pt chinois                       | Horst Kloss |
+| Wimmers gute Semmelkndel         | Horst Kloss |
+| Louisiana Fiery Hot Pepper Sauce | Horst Kloss |
+| Original Frankfurter grne Soe    | Horst Kloss |
+| Mishi Kobe Niku                  | Horst Kloss |
+| Pavlova                          | Horst Kloss |
+| Schoggi Schokolade               | Horst Kloss |
+| Geitost                          | Horst Kloss |
+| Camembert Pierrot                | Horst Kloss |
+| Chef Anton's Cajun Seasoning     | Horst Kloss |
+| Inlagd Sill                      | Horst Kloss |
+| Aniseed Syrup                    | Horst Kloss |
+| Gumbr Gummibrchen                | Horst Kloss |
+| Cte de Blaye                     | Horst Kloss |
+| Scottish Longbreads              | Horst Kloss |
+| Gorgonzola Telino                | Horst Kloss |
+| Rogede sild                      | Horst Kloss |
+| Manjimup Dried Apples            | Horst Kloss |
+| Carnarvon Tigers                 | Horst Kloss |
+| Singaporean Hokkien Fried Mee    | Horst Kloss |
+| Sir Rodney's Scones              | Horst Kloss |
+| Boston Crab Meat                 | Horst Kloss |
+| Camembert Pierrot                | Horst Kloss |
+| Original Frankfurter grne Soe    | Horst Kloss |
+| Chai                             | Horst Kloss |
+| Thringer Rostbratwurst           | Horst Kloss |
+| Ipoh Coffee                      | Horst Kloss |
+| Gula Malacca                     | Horst Kloss |
+| Tarte au sucre                   | Horst Kloss |
+| Uncle Bob's Organic Dried Pears  | Horst Kloss |
+| Raclette Courdavault             | Horst Kloss |
+| Outback Lager                    | Horst Kloss |
+| Gula Malacca                     | Horst Kloss |
+| Carnarvon Tigers                 | Horst Kloss |
+| Gula Malacca                     | Horst Kloss |
+| Raclette Courdavault             | Horst Kloss |
+| Mozzarella di Giovanni           | Horst Kloss |
+| Louisiana Fiery Hot Pepper Sauce | Horst Kloss |
+| Teatime Chocolate Biscuits       | Horst Kloss |
+| Rhnbru Klosterbier               | Horst Kloss |
+| Tunnbrd                          | Horst Kloss |
+| Steeleye Stout                   | Horst Kloss |
+| Singaporean Hokkien Fried Mee    | Horst Kloss |
+| Escargots de Bourgogne           | Horst Kloss |
+| Wimmers gute Semmelkndel         | Horst Kloss |
+| Cte de Blaye                     | Horst Kloss |
+| Chartreuse verte                 | Horst Kloss |
+| Sir Rodney's Marmalade           | Horst Kloss |
+| Konbu                            | Horst Kloss |
+| Ipoh Coffee                      | Horst Kloss |
+| Camembert Pierrot                | Horst Kloss |
+| Flotemysost                      | Horst Kloss |
+| Uncle Bob's Organic Dried Pears  | Horst Kloss |
+| Konbu                            | Horst Kloss |
+| Perth Pasties                    | Horst Kloss |
+| Gudbrandsdalsost                 | Horst Kloss |
+| Lakkalikri                       | Horst Kloss |
+| Chang                            | Horst Kloss |
+| Outback Lager                    | Horst Kloss |
+| Lakkalikri                       | Horst Kloss |
+| Singaporean Hokkien Fried Mee    | Horst Kloss |
+| Chang                            | Horst Kloss |
+| Sir Rodney's Marmalade           | Horst Kloss |
+| Gumbr Gummibrchen                | Horst Kloss |
+| Manjimup Dried Apples            | Horst Kloss |
+| Mozzarella di Giovanni           | Horst Kloss |
++----------------------------------+-------------+
+86 rows in set (0.1657 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by count(a.productname);
+ERROR: 1111 (HY000): Invalid use of group function
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by a.productname;
++----------------------------------+-------------+----------+
+| productname                      | contactname | count(*) |
++----------------------------------+-------------+----------+
+| Ikura                            | Horst Kloss |        1 |
+| Gorgonzola Telino                | Horst Kloss |        2 |
+| Geitost                          | Horst Kloss |        2 |
+| Boston Crab Meat                 | Horst Kloss |        3 |
+| Lakkalikri                       | Horst Kloss |        3 |
+| Chai                             | Horst Kloss |        2 |
+| Perth Pasties                    | Horst Kloss |        2 |
+| Steeleye Stout                   | Horst Kloss |        2 |
+| Tarte au sucre                   | Horst Kloss |        2 |
+| Inlagd Sill                      | Horst Kloss |        2 |
+| Northwoods Cranberry Sauce       | Horst Kloss |        1 |
+| Teatime Chocolate Biscuits       | Horst Kloss |        2 |
+| Singaporean Hokkien Fried Mee    | Horst Kloss |        4 |
+| Chartreuse verte                 | Horst Kloss |        2 |
+| Camembert Pierrot                | Horst Kloss |        4 |
+| Chang                            | Horst Kloss |        3 |
+| Zaanse koeken                    | Horst Kloss |        1 |
+| Sirop d'rable                    | Horst Kloss |        1 |
+| Longlife Tofu                    | Horst Kloss |        1 |
+| Pt chinois                       | Horst Kloss |        1 |
+| Wimmers gute Semmelkndel         | Horst Kloss |        2 |
+| Louisiana Fiery Hot Pepper Sauce | Horst Kloss |        2 |
+| Original Frankfurter grne Soe    | Horst Kloss |        2 |
+| Mishi Kobe Niku                  | Horst Kloss |        1 |
+| Pavlova                          | Horst Kloss |        1 |
+| Schoggi Schokolade               | Horst Kloss |        1 |
+| Chef Anton's Cajun Seasoning     | Horst Kloss |        1 |
+| Aniseed Syrup                    | Horst Kloss |        1 |
+| Gumbr Gummibrchen                | Horst Kloss |        2 |
+| Cte de Blaye                     | Horst Kloss |        2 |
+| Scottish Longbreads              | Horst Kloss |        1 |
+| Rogede sild                      | Horst Kloss |        1 |
+| Manjimup Dried Apples            | Horst Kloss |        2 |
+| Carnarvon Tigers                 | Horst Kloss |        2 |
+| Sir Rodney's Scones              | Horst Kloss |        1 |
+| Thringer Rostbratwurst           | Horst Kloss |        1 |
+| Ipoh Coffee                      | Horst Kloss |        2 |
+| Gula Malacca                     | Horst Kloss |        3 |
+| Uncle Bob's Organic Dried Pears  | Horst Kloss |        2 |
+| Raclette Courdavault             | Horst Kloss |        2 |
+| Outback Lager                    | Horst Kloss |        2 |
+| Mozzarella di Giovanni           | Horst Kloss |        2 |
+| Rhnbru Klosterbier               | Horst Kloss |        1 |
+| Tunnbrd                          | Horst Kloss |        1 |
+| Escargots de Bourgogne           | Horst Kloss |        1 |
+| Sir Rodney's Marmalade           | Horst Kloss |        2 |
+| Konbu                            | Horst Kloss |        2 |
+| Flotemysost                      | Horst Kloss |        1 |
+| Gudbrandsdalsost                 | Horst Kloss |        1 |
++----------------------------------+-------------+----------+
+49 rows in set (0.0063 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by a.productname desc limit 1;
++---------------+-------------+----------+
+| productname   | contactname | count(*) |
++---------------+-------------+----------+
+| Zaanse koeken | Horst Kloss |        1 |
++---------------+-------------+----------+
+1 row in set (0.0049 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by a.productname order by count(*)
+limit 1;
++---------------+-------------+----------+
+| productname   | contactname | count(*) |
++---------------+-------------+----------+
+| Sirop d'rable | Horst Kloss |        1 |
++---------------+-------------+----------+
+1 row in set (0.0044 sec)
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by a.productname order desc by coun
+t(*) limit 1;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that
+ corresponds to your MySQL server version for the right syntax to use near 'desc
+ by count(*) limit 1' at line 1
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by a.productname order by count(*)
+limit desc 1;
+ERROR: 1064 (42000): You have an error in your SQL syntax; check the manual that
+ corresponds to your MySQL server version for the right syntax to use near 'desc
+ 1' at line 1
+
+MySQL [localhost ssl/northwind] SQL> select a.productname,d.contactname,count(*)
+ from products a inner join orderdetails b on b.productid=a.productid inner join
+ orders c on c.orderid=b.orderid inner join customers d on d.customerid=c.custom
+erid where d.contactname='Horst Kloss' group by a.productname order by count(*)
+desc limit 1;
++-------------------------------+-------------+----------+
+| productname                   | contactname | count(*) |
++-------------------------------+-------------+----------+
+| Singaporean Hokkien Fried Mee | Horst Kloss |        4 |
++-------------------------------+-------------+----------+
+1 row in set (0.0135 sec)
+
+MySQL [localhost ssl/northwind] SQL>
